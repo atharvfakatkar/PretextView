@@ -1268,6 +1268,7 @@ waypoint
     waypoint *prev;
     waypoint *next;
     waypoint_quadtree_node *node;
+    u08 isvertical;
 };
 
 #define Edits_Stack_Size 32768
@@ -1762,7 +1763,7 @@ GetWaypointQuadTreeLevel(point2f coords)
 
 global_function
 void
-AddWayPoint(point2f coords)
+AddWayPoint(point2f coords, u08 isvert = 1)
 {
     u32 nFree = Waypoints_Stack_Size - Waypoint_Editor->nWaypointsActive;
 
@@ -1795,6 +1796,8 @@ AddWayPoint(point2f coords)
 
         wayp->node = node;
         node->wayp = wayp;
+
+        (isvert) ? wayp->isvertical = 1 : wayp->isvertical = 0;
     }
 }
 
@@ -2210,6 +2213,11 @@ Mouse(GLFWwindow* window, s32 button, s32 action, s32 mods)
         else if (button == primaryMouse && Waypoint_Edit_Mode && action == GLFW_PRESS)
         {
             AddWayPoint(Tool_Tip_Move.worldCoords);
+            MouseMove(window, x, y);
+        }
+        else if (button == secondaryMouse && Waypoint_Edit_Mode && action == GLFW_PRESS)
+        {
+            AddWayPoint(Tool_Tip_Move.worldCoords, 0);
             MouseMove(window, x, y);
         }
         else if (button == GLFW_MOUSE_BUTTON_MIDDLE && Waypoint_Edit_Mode && action == GLFW_PRESS)
@@ -3298,6 +3306,7 @@ Render()
             {
                 point2f screen = {ModelXToScreen(node->coords.x), ModelYToScreen(-node->coords.y)};
                 point2f screenYRange = {ModelYToScreen(0.5f), ModelYToScreen(-0.5f)};
+                point2f screenXRange = {ModelXToScreen(0.5f), ModelXToScreen(-0.5f)};
 
                 glUseProgram(Flat_Shader->shaderProgram);
                 if (node == Selected_Waypoint)
@@ -3305,47 +3314,98 @@ Render()
                     glUniform4fv(Flat_Shader->colorLocation, 1, (f32 *)&Waypoint_Mode_Data->selected);
                 }
 
-                vert[0].x = screen.x - lineWidth;
-                vert[0].y = screenYRange.x;
-                vert[1].x = screen.x - lineWidth;
-                vert[1].y = screenYRange.y;
-                vert[2].x = screen.x + lineWidth;
-                vert[2].y = screenYRange.y;
-                vert[3].x = screen.x + lineWidth;
-                vert[3].y = screenYRange.x;
+                if(node->isvertical)
+                {
+                    //Vertical waypoint line
+                    vert[0].x = screen.x - lineWidth;
+                    vert[0].y = screenYRange.x;
+                    vert[1].x = screen.x - lineWidth;
+                    vert[1].y = screenYRange.y;
+                    vert[2].x = screen.x + lineWidth;
+                    vert[2].y = screenYRange.y;
+                    vert[3].x = screen.x + lineWidth;
+                    vert[3].y = screenYRange.x;
 
-                glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
-                glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
-                glBindVertexArray(Waypoint_Data->vaos[ptr++]);
-                glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
+                    glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
+                    glBindVertexArray(Waypoint_Data->vaos[ptr++]);
+                    glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
 
-                vert[0].x = screen.x - lineHeight;
-                vert[0].y = screen.y - lineWidth;
-                vert[1].x = screen.x - lineHeight;
-                vert[1].y = screen.y + lineWidth;
-                vert[2].x = screen.x - lineWidth;
-                vert[2].y = screen.y + lineWidth;
-                vert[3].x = screen.x - lineWidth;
-                vert[3].y = screen.y - lineWidth;
+                    //crosshair for vertical waypoint
+                    vert[0].x = screen.x - lineHeight;
+                    vert[0].y = screen.y - lineWidth;
+                    vert[1].x = screen.x - lineHeight;
+                    vert[1].y = screen.y + lineWidth;
+                    vert[2].x = screen.x - lineWidth;
+                    vert[2].y = screen.y + lineWidth;
+                    vert[3].x = screen.x - lineWidth;
+                    vert[3].y = screen.y - lineWidth;
 
-                glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
-                glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
-                glBindVertexArray(Waypoint_Data->vaos[ptr++]);
-                glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
+                    glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
+                    glBindVertexArray(Waypoint_Data->vaos[ptr++]);
+                    glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
 
-                vert[0].x = screen.x + lineWidth;
-                vert[0].y = screen.y - lineWidth;
-                vert[1].x = screen.x + lineWidth;
-                vert[1].y = screen.y + lineWidth;
-                vert[2].x = screen.x + lineHeight;
-                vert[2].y = screen.y + lineWidth;
-                vert[3].x = screen.x + lineHeight;
-                vert[3].y = screen.y - lineWidth;
+                    vert[0].x = screen.x + lineWidth;
+                    vert[0].y = screen.y - lineWidth;
+                    vert[1].x = screen.x + lineWidth;
+                    vert[1].y = screen.y + lineWidth;
+                    vert[2].x = screen.x + lineHeight;
+                    vert[2].y = screen.y + lineWidth;
+                    vert[3].x = screen.x + lineHeight;
+                    vert[3].y = screen.y - lineWidth;
 
-                glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
-                glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
-                glBindVertexArray(Waypoint_Data->vaos[ptr++]);
-                glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
+                    glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
+                    glBindVertexArray(Waypoint_Data->vaos[ptr++]);
+                    glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
+                }
+                else 
+                {
+                    //Horizontal wayppoint line
+                    vert[0].x = screenXRange.x;
+                    vert[0].y = screen.y - lineWidth;
+                    vert[1].x = screenXRange.y;
+                    vert[1].y = screen.y - lineWidth;
+                    vert[2].x = screenXRange.y;
+                    vert[2].y = screen.y + lineWidth;
+                    vert[3].x = screenXRange.x;
+                    vert[3].y = screen.y + lineWidth;
+
+                    glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
+                    glBindVertexArray(Waypoint_Data->vaos[ptr++]);
+                    glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
+
+                    //crosshair for horizontal waypoint
+                    vert[0].x = screen.x - lineWidth;
+                    vert[0].y = screen.y - lineHeight;
+                    vert[1].x = screen.x - lineWidth;
+                    vert[1].y = screen.y + lineHeight;
+                    vert[2].x = screen.x + lineWidth;
+                    vert[2].y = screen.y + lineHeight;
+                    vert[3].x = screen.x + lineWidth;
+                    vert[3].y = screen.y - lineHeight;
+
+                    glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
+                    glBindVertexArray(Waypoint_Data->vaos[ptr++]);
+                    glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
+
+                    vert[0].x = screen.x + lineWidth;
+                    vert[0].y = screen.y - lineHeight;
+                    vert[1].x = screen.x + lineWidth;
+                    vert[1].y = screen.y + lineHeight;
+                    vert[2].x = screen.x + 2 * lineWidth;
+                    vert[2].y = screen.y + lineHeight;
+                    vert[3].x = screen.x + 2 * lineWidth;
+                    vert[3].y = screen.y - lineHeight;
+
+                    glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
+                    glBindVertexArray(Waypoint_Data->vaos[ptr++]);
+                    glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);  
+                }
                
                 if (node == Selected_Waypoint)
                 {
@@ -3374,16 +3434,17 @@ Render()
                 fonsSetColor(FontStash_Context, FourFloatColorToU32(Waypoint_Mode_Data->text));
 
                 f32 textBoxHeight = lh;
-                textBoxHeight *= 4.0f;
+                textBoxHeight *= 5.0f;
                 textBoxHeight += 3.0f;
                 f32 spacing = 10.0f;
 
                 char *helpText1 = (char *)"Waypoint Edit Mode";
                 char *helpText2 = (char *)"W: exit";
                 char *helpText3 = (char *)"Left Click: place";
-                char *helpText4 = (char *)"Middle Click / Spacebar: delete";
+                char *helpText4 = (char *)"Right Click: place horizontal";
+                char *helpText5 = (char *)"Middle Click / Spacebar: delete";
 
-                f32 textWidth = fonsTextBounds(FontStash_Context, 0, 0, helpText4, 0, NULL);
+                f32 textWidth = fonsTextBounds(FontStash_Context, 0, 0, helpText5, 0, NULL);
 
                 glUseProgram(Flat_Shader->shaderProgram);
                 glUniform4fv(Flat_Shader->colorLocation, 1, (f32 *)&Waypoint_Mode_Data->bg);
@@ -3410,6 +3471,8 @@ Render()
                 fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText3, 0);
                 textY += (1.0f + lh);
                 fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText4, 0);
+                textY += (1.0f + lh);
+                fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText5, 0);
             }
         }
        
@@ -7641,7 +7704,7 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
             }
         }
 
-        u32 nFileBytes = 352 + (13 * nWayp) + (12 * nEdits) + ((nEdits + 7) >> 3) + (32 * nGraphPlots) + (8 * nScaffs) + sizeof(meta_mode_data) + sizeof(MetaData_Active_Tag) + 4 + (12 * nMetaFlags) + 1 + nMetaTags + totalMetaTagSpace;
+        u32 nFileBytes = 352 + (14 * nWayp) + (12 * nEdits) + ((nEdits + 7) >> 3) + (32 * nGraphPlots) + (8 * nScaffs) + sizeof(meta_mode_data) + sizeof(MetaData_Active_Tag) + 4 + (12 * nMetaFlags) + 1 + nMetaTags + totalMetaTagSpace;
         u08 *fileContents = PushArrayP(Loading_Arena, u08, nFileBytes);
         u08 *fileWriter = fileContents;
 
@@ -7817,15 +7880,17 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
         {
             *fileWriter++ = (u08)nWayp;
 
-            u32 ptr = 348 + (13 * nWayp) + (12 * nEdits) + ((nEdits + 7) >> 3);
+            u32 ptr = 348 + (14 * nWayp) + (12 * nEdits) + ((nEdits + 7) >> 3);
             TraverseLinkedList(Waypoint_Editor->activeWaypoints.next, waypoint)
             {
                 f32 x = node->coords.x;
                 f32 y = node->coords.y;
                 f32 z = node->z;
                 u08 id = (u08)node->index;
+                u08 isvert = (u08)node->isvertical;
 
                 fileContents[--ptr] = id;
+                fileContents[--ptr] = isvert;
                 fileContents[--ptr] = ((u08 *)&z)[3];
                 fileContents[--ptr] = ((u08 *)&z)[2];
                 fileContents[--ptr] = ((u08 *)&z)[1];
@@ -7840,7 +7905,7 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
                 fileContents[--ptr] = ((u08 *)&x)[0];
             }
 
-            fileWriter += (13 * nWayp);
+            fileWriter += (14 * nWayp);
         }
 
         // scaffs
@@ -8378,6 +8443,7 @@ LoadState(u64 headerHash, char *path)
                         f32 x;
                         f32 y;
                         f32 z;
+                        u08 isvert;
 
                         ((u08 *)&x)[0] = *fileContents++;
                         ((u08 *)&x)[1] = *fileContents++;
@@ -8391,14 +8457,15 @@ LoadState(u64 headerHash, char *path)
                         ((u08 *)&z)[1] = *fileContents++;
                         ((u08 *)&z)[2] = *fileContents++;
                         ((u08 *)&z)[3] = *fileContents++;
+                        if(!oldStyle) isvert = *fileContents++;
                         u08 id = *fileContents++;
 
-                        AddWayPoint({x, y});
+                        oldStyle ? AddWayPoint({x, y}) : AddWayPoint({x, y}, isvert);
                         Waypoint_Editor->activeWaypoints.next->z = z;
                         Waypoint_Editor->activeWaypoints.next->index = (u32)id;
                     }
 
-                    nBytesRead += (13 * nWayp);
+                    nBytesRead += (oldStyle ? (13 * nWayp) : (14 * nWayp));
                 }
 
                 // scaffs
