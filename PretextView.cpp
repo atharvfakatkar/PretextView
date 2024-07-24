@@ -882,6 +882,10 @@ meta_mode_data *
 MetaData_Mode_Data;
 
 global_variable
+meta_mode_data *
+Extension_Mode_Data;
+
+global_variable
 u32
 UI_On = 0;
 
@@ -892,7 +896,8 @@ global_mode
     mode_edit = 1,
     mode_waypoint_edit = 2,
     mode_scaff_edit = 3,
-    mode_meta_edit = 4
+    mode_meta_edit = 4,
+    mode_extension = 5
 };
 
 global_variable
@@ -904,6 +909,7 @@ Global_Mode = mode_normal;
 #define Waypoint_Edit_Mode (Global_Mode == mode_waypoint_edit)
 #define Scaff_Edit_Mode (Global_Mode == mode_scaff_edit)
 #define MetaData_Edit_Mode (Global_Mode == mode_meta_edit)
+#define Extension_Mode (Global_Mode == mode_extension)
 
 global_variable
 s32
@@ -3475,6 +3481,77 @@ Render()
                 fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText5, 0);
             }
         }
+
+        //Extension Mode
+        if (Extension_Mode && !UI_On)
+        {
+            u32 ptr = 0;
+            vertex vert[4];
+            f32 lh = 0.0f; 
+
+            glUseProgram(Flat_Shader->shaderProgram);
+            glUniformMatrix4fv(Flat_Shader->matLocation, 1, GL_FALSE, textNormalMat);
+            glUseProgram(UI_Shader->shaderProgram);
+            glUniformMatrix4fv(UI_Shader->matLocation, 1, GL_FALSE, textNormalMat);
+
+            glViewport(0, 0, (s32)width, (s32)height);
+
+#define DefaultExtensionSize 20.0f
+            // glUseProgram(Flat_Shader->shaderProgram);
+            // glUniform4fv(Flat_Shader->colorLocation, 1, (f32 *)&Waypoint_Mode_Data->base);
+
+            // f32 lineWidth = Waypoint_Mode_Data->size / DefaultWaypointSize * 0.7f * Screen_Scale.x;
+            // f32 lineHeight = Waypoint_Mode_Data->size / DefaultWaypointSize * 8.0f * Screen_Scale.x;
+
+            fonsSetSize(FontStash_Context, 24.0f * Screen_Scale.x);
+            fonsVertMetrics(FontStash_Context, 0, 0, &lh);
+            fonsSetColor(FontStash_Context, FourFloatColorToU32(Extension_Mode_Data->text));
+
+            f32 textBoxHeight = lh;
+            textBoxHeight *= 7.0f;
+            textBoxHeight += 6.0f;
+            f32 spacing = 10.0f;
+
+            char *helpText1 = (char *)"Extensions:";
+            char *helpText2 = (char *)"X: exit";
+            char *helpText3 = (char *)"C: Graph: coverage";
+            char *helpText4 = (char *)"G: Graph: gap";
+            char *helpText5 = (char *)"R: Graph: repeat_density";
+            char *helpText6 = (char *)"T: Graph:telomere";
+            
+
+            f32 textWidth = fonsTextBounds(FontStash_Context, 0, 0, helpText5, 0, NULL);
+
+            glUseProgram(Flat_Shader->shaderProgram);
+            glUniform4fv(Flat_Shader->colorLocation, 1, (f32 *)&Extension_Mode_Data->bg);
+
+            vert[0].x = width - spacing - textWidth;
+            vert[0].y = height - spacing - textBoxHeight;
+            vert[1].x = width - spacing - textWidth;
+            vert[1].y = height - spacing;
+            vert[2].x = width - spacing;
+            vert[2].y = height - spacing;
+            vert[3].x = width - spacing;
+            vert[3].y = height - spacing - textBoxHeight;
+
+            glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
+            glBindVertexArray(Waypoint_Data->vaos[ptr++]);
+            glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
+
+            glUseProgram(UI_Shader->shaderProgram);
+            fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight, helpText1, 0);
+            f32 textY = 1.0f + lh;
+            fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText2, 0);
+            textY += (1.0f + lh);
+            fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText3, 0);
+            textY += (1.0f + lh);
+            fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText4, 0);
+            textY += (1.0f + lh);
+            fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText5, 0);
+            textY += (1.0f + lh);
+            fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText6, 0);
+        }
        
         // Scaff Bars
         if (File_Loaded && (Scaff_Edit_Mode || Scaffs_Always_Visible))
@@ -5607,6 +5684,14 @@ Setup()
         MetaData_Mode_Data->size = DefaultMetaDataSize;
     }
 
+    //Extension Mode Colours
+    {
+        Extension_Mode_Data = PushStruct(Working_Set, meta_mode_data);
+        Extension_Mode_Data->text = Yellow_Text_Float;
+        Extension_Mode_Data->bg = Grey_Background;
+        Extension_Mode_Data->size = DefaultExtensionSize;
+    }
+
 #ifdef Internal
     {
         Tiles = PushStruct(Working_Set, ui_colour_element);
@@ -6169,6 +6254,24 @@ ToggleEditMode(GLFWwindow* window)
 
 global_function
 u32
+ToggleExtensionMode(GLFWwindow* window) {
+    u32 result = 1;
+
+    if (Extension_Mode) {
+        Global_Mode = mode_normal;
+    }
+    else if (Normal_Mode) {
+        Global_Mode = mode_extension;
+    }
+    else {
+        result = 0;
+    }
+
+    return result;
+}
+
+global_function
+u32
 ToggleWaypointMode(GLFWwindow* window)
 {
     u32 result = 1;
@@ -6454,6 +6557,10 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                     keyPressed = ToggleEditMode(window);
                     break;
 
+                case GLFW_KEY_X:
+                    keyPressed = ToggleExtensionMode(window);
+                    break;
+
                 case GLFW_KEY_W:
                     if (Edit_Mode)
                     {
@@ -6527,7 +6634,50 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                     break;
                 
                 case GLFW_KEY_T:
-                    ToggleToolTip(window);
+                    if (Extension_Mode && Extensions.head)
+                    {
+                        TraverseLinkedList(Extensions.head, extension_node)
+                        {
+                            switch (node->type)
+                            {
+                                case extension_graph:
+                                {
+                                    
+                                    graph *gph = (graph *)node->extension;
+                                    if (strcmp((char *)gph->name, "telomere") == 0) {
+                                        gph->on = !gph->on;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        ToggleToolTip(window);
+                    }
+                    break;
+
+                case GLFW_KEY_C:
+                    if ((Extension_Mode && Extensions.head) ||(mods & GLFW_MOD_SHIFT))
+                    {
+                        TraverseLinkedList(Extensions.head, extension_node)
+                        {
+                            switch (node->type)
+                            {
+                                case extension_graph:
+                                {
+                                    
+                                    graph *gph = (graph *)node->extension;
+                                    if (strcmp((char *)gph->name, "coverage") == 0) {
+                                        gph->on = !gph->on;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
                     break;
 
                 case GLFW_KEY_N:
@@ -6539,7 +6689,29 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                     break;
 
                 case GLFW_KEY_G:
-                    Grid->on = !Grid->on;
+                    if ((Extension_Mode && Extensions.head) ||(mods & GLFW_MOD_SHIFT))
+                    {
+                        TraverseLinkedList(Extensions.head, extension_node)
+                        {
+                            switch (node->type)
+                            {
+                                case extension_graph:
+                                {
+                                    
+                                    graph *gph = (graph *)node->extension;
+                                    if (strcmp((char *)gph->name, "gap") == 0) {
+                                        gph->on = !gph->on;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        Grid->on = !Grid->on;
+                    }
                     break;
 
                 case GLFW_KEY_S:
@@ -6600,6 +6772,25 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                     if (mods == GLFW_MOD_CONTROL)
                     {
                         Loading = 1;
+                    }
+                    else if (Extension_Mode && Extensions.head)
+                    {
+                        TraverseLinkedList(Extensions.head, extension_node)
+                        {
+                            switch (node->type)
+                            {
+                                case extension_graph:
+                                {
+                                    
+                                    graph *gph = (graph *)node->extension;
+                                    if (strcmp((char *)gph->name, "repeat_density") == 0) {
+                                        gph->on = !gph->on;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        break;
                     }
                     else
                     {
