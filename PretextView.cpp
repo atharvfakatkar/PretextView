@@ -5412,7 +5412,28 @@ Default_Tags[] =
     "X",
     "Y",
     "Z",
-    "W"
+    "W",
+    "HAP1",
+    "HAP2",
+    "Target",
+    "Contaminant",
+    "X1",
+    "X2",
+    "Y1",
+    "Y2",
+    "Z1",
+    "Z2",
+    "W1",
+    "W2",
+    "I",
+    "II",
+    "III",
+    "IV",
+    "V",
+    "B1",
+    "B2",
+    "B3",
+    "U"
 };
 
 global_function
@@ -7546,7 +7567,7 @@ SetSaveStatePaths()
 
 global_variable
 u08
-SaveState_Magic[5] = {'p', 't', 's', 'x', 2};
+SaveState_Magic[5] = {'p', 't', 's', 'x', 3};
 
 global_variable
 u08
@@ -7853,10 +7874,12 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
             memcpy(fileWriter, (const void *)MetaData_Mode_Data, sizeof(meta_mode_data));
             fileWriter += sizeof(meta_mode_data);
 
-            *fileWriter++ = ((u08 *)&nMetaFlags)[0];
-            *fileWriter++ = ((u08 *)&nMetaFlags)[1];
-            *fileWriter++ = ((u08 *)&nMetaFlags)[2];
-            *fileWriter++ = ((u08 *)&nMetaFlags)[3];
+            u16 counter = 0;
+            ForLoop(27)
+            {
+                *fileWriter++ = ((u08 *)&nMetaFlags)[counter];
+                counter++;
+            }
             ForLoop(Contigs->numberOfContigs)
             {
                 if (*(Contigs->contigs + index)->metaDataFlags)
@@ -7977,6 +8000,7 @@ global_function
 u08
 LoadState(u64 headerHash, char *path)
 {
+    u08 oldStyle = 0;
     if (!path && !SaveState_Path)
     {
         SetSaveStatePaths();
@@ -8014,6 +8038,7 @@ LoadState(u64 headerHash, char *path)
                         }
                         else
                         {
+                            oldStyle = magicTest[sizeof(magicTest) - 1] == '2';
                             u64 hashTest;
                             bytesRead = (u32)fread(&hashTest, 1, sizeof(hashTest), file);
                             if (!(bytesRead == sizeof(hashTest) && hashTest == headerHash))
@@ -8047,7 +8072,7 @@ LoadState(u64 headerHash, char *path)
                 u32 bytesRead = (u32)fread(magicTest, 1, sizeof(magicTest), file);
                 if (bytesRead == sizeof(magicTest))
                 {
-                    ForLoop(sizeof(SaveState_Magic))
+                    ForLoop(sizeof(SaveState_Magic) - 1)
                     {
                         if (SaveState_Magic[index] != magicTest[index])
                         {
@@ -8420,11 +8445,24 @@ LoadState(u64 headerHash, char *path)
                     nBytesRead += sizeof(meta_mode_data);
 
                     u32 nMetaFlags;
-                    ((u08 *)&nMetaFlags)[0] = *fileContents++;
-                    ((u08 *)&nMetaFlags)[1] = *fileContents++;
-                    ((u08 *)&nMetaFlags)[2] = *fileContents++;
-                    ((u08 *)&nMetaFlags)[3] = *fileContents++;
-                    nBytesRead += 4;
+                    if(oldStyle)
+                    {
+                        ((u08 *)&nMetaFlags)[0] = *fileContents++;
+                        ((u08 *)&nMetaFlags)[1] = *fileContents++;
+                        ((u08 *)&nMetaFlags)[2] = *fileContents++;
+                        ((u08 *)&nMetaFlags)[3] = *fileContents++;
+                        nBytesRead += 4;
+                    }
+                    else
+                    {
+                        u16 counter = 0;
+                        ForLoop(27)
+                        {
+                            ((u08 *)&nMetaFlags)[counter] = *fileContents++;
+                            counter++;
+                        }
+                        nBytesRead += 27;
+                    }
 
                     memset(Map_State->metaDataFlags, 0, Number_of_Pixels_1D * sizeof(u64));
                     ForLoop(nMetaFlags)
