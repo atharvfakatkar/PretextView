@@ -9825,6 +9825,17 @@ MainArgs
                                                     f32 pos = (f32)((f64)cont->contigMapPixels[index2] / (f64)Number_of_Pixels_1D) - 0.5f;
                                                     Camera_Position.x = pos;
                                                     Camera_Position.y = -pos;
+                                                    Camera_Position.z = 1.0f;
+
+                                                    f32 contigSizeInPixels = (f32)cont->contigMapPixels[index2];
+                                                    f32 screenWidth = (f32)width;
+                                                    
+
+                                                    // f32 zoomLevel =(f32)(contigSizeInPixels / (screenWidth * index2));
+                                                    f32 zoomLevel =(f32)(contigSizeInPixels / (screenWidth));
+                                                    ZoomCamera(zoomLevel);
+                        
+                                                    Redisplay = 1;
                                                 }
 
                                                 if (nk_button_label(NK_Context, "Rebuild")) RebuildContig(cont->contigMapPixels[index2]);
