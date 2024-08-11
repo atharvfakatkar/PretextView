@@ -1034,6 +1034,10 @@ global_variable
 u08
 MetaData_Edit_State = 0;
 
+global_variable
+u16
+sortMetaEdits;
+
 struct
 map_state
 {
@@ -1157,6 +1161,7 @@ RebuildContig(u32 pixel)
         {
             InvertMap(top, bottom);
             AddMapEdit(0, {top, bottom}, 1);
+            sortMetaEdits = 0;
             continue;
         }
 
@@ -1204,6 +1209,7 @@ RebuildContig(u32 pixel)
                 RearrangeMap(otherPixel2, otherPixel, delta);
                 if (invert) InvertMap(finalPixels.x, finalPixels.y);
                 AddMapEdit(delta, finalPixels, invert);
+                sortMetaEdits = 0;
             }
             else
             {
@@ -1238,6 +1244,7 @@ RebuildContig(u32 pixel)
                 RearrangeMap(otherPixel2, otherPixel, delta);
                 if (invert) InvertMap(finalPixels.x, finalPixels.y);
                 AddMapEdit(delta, finalPixels, invert);
+                sortMetaEdits = 0;
             }
 
             continue;
@@ -2195,6 +2202,7 @@ Mouse(GLFWwindow* window, s32 button, s32 action, s32 mods)
             Edit_Pixels.editing = !Edit_Pixels.editing;
             MouseMove(window, x, y);
             if (!Edit_Pixels.editing) UpdateScaffolds();
+            sortMetaEdits = 0;
         }
         else if (button == GLFW_MOUSE_BUTTON_MIDDLE && Edit_Mode && action == GLFW_RELEASE && !Edit_Pixels.editing)
         {
@@ -2213,6 +2221,7 @@ Mouse(GLFWwindow* window, s32 button, s32 action, s32 mods)
             InvertMap(Edit_Pixels.pixels.x, Edit_Pixels.pixels.y);
             Global_Edit_Invert_Flag = !Global_Edit_Invert_Flag;
             UpdateContigsFromMapState();
+            sortMetaEdits = 0;
 
             Redisplay = 1;
         }
@@ -2250,6 +2259,7 @@ Mouse(GLFWwindow* window, s32 button, s32 action, s32 mods)
             Scaff_Painting_Id = 0;
             MouseMove(window, x, y);
             UpdateScaffolds();
+            sortMetaEdits = 0;
         }
         else if (button == primaryMouse && MetaData_Edit_Mode && action == GLFW_PRESS)
         {
@@ -6224,6 +6234,15 @@ RearrangeMap(u32 pixelFrom, u32 pixelTo, s32 delta, u08 snap)
 }
 
 global_function
+void
+JumpToDiagonal(GLFWwindow* window)
+{
+    Camera_Position.x = -Camera_Position.y;
+    ClampCamera();
+    Redisplay = 1;
+}
+
+global_function
 u32
 ToggleEditMode(GLFWwindow* window)
 {
@@ -6555,6 +6574,10 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
             {
                 case GLFW_KEY_E:
                     keyPressed = ToggleEditMode(window);
+                    break;
+
+                case GLFW_KEY_J:
+                    JumpToDiagonal(window);
                     break;
 
                 case GLFW_KEY_X:
@@ -8023,6 +8046,11 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
                 *fileWriter++ = ((u08 *)&nEdits)[index];
             }
 
+            ForLoop(2)
+            {
+                *fileWriter++ = ((u08 *)&sortMetaEdits)[index];
+            }
+
             u32 editStackPtr = Map_Editor->editStackPtr == nEdits ? 0 : Map_Editor->editStackPtr;
             u32 nContigFlags = (nEdits + 7) >> 3;
             u08 *contigFlags = fileWriter + (12 * nEdits);
@@ -8577,6 +8605,19 @@ LoadState(u64 headerHash, char *path)
 
                     ForLoop(4) ((u08 *)&nEdits)[index] = *fileContents++;
                     nBytesRead += 4;
+                    
+                    try
+                    {
+                        if(!oldStyle)
+                        {
+                            ForLoop(2) ((u08 *)&sortMetaEdits)[index] = *fileContents++;
+                            nBytesRead += 2;
+                        }
+                    }
+                    catch(...)
+                    {
+                        printf("Error loading the Edits!!");
+                    }
 
                     u08 *contigFlags = fileContents + (12 * nEdits);
                     u32 nContigFlags = ((u32)nEdits + 7) >> 3;
@@ -8978,6 +9019,7 @@ void
 SortMapByMetaTags()
 {
     u32 nPixelToConsider = Number_of_Pixels_1D;
+    sortMetaEdits = 0;
     for (;;)
     {
         u64 maxFlag = 0;
@@ -8997,6 +9039,7 @@ SortMapByMetaTags()
                 {
                     RearrangeMap(pixelStart, pixelEnd, delta);
                     AddMapEdit(delta, {(u32)((s32)pixelStart + delta), (u32)((s32)pixelEnd + delta)}, 0);
+                    sortMetaEdits++;
                 }
 
                 nPixelToConsider -= (pixelEnd - pixelStart + 1);
@@ -9269,7 +9312,7 @@ MainArgs
                     }
                     showAboutScreen = nk_button_label(NK_Context, "About");
 
-                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 3);
+                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 4);
                     
                     bounds = nk_widget_bounds(NK_Context);
                     if ((nk_option_label(NK_Context, "Waypoint Edit Mode", Global_Mode == mode_waypoint_edit) ? 1 : 0) != (Global_Mode == mode_waypoint_edit ? 1 : 0)) Global_Mode = Global_Mode == mode_waypoint_edit ? mode_normal : mode_waypoint_edit;
@@ -9389,6 +9432,8 @@ MainArgs
 
                         nk_contextual_end(NK_Context);
                     }
+
+                    if ((nk_option_label(NK_Context, "Extension Mode", Global_Mode == mode_extension) ? 1 : 0) != (Global_Mode == mode_extension ? 1 : 0)) Global_Mode = Global_Mode == mode_extension ? mode_normal : mode_extension;
 
                     nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
                     Waypoints_Always_Visible = nk_check_label(NK_Context, "Waypoints Always Visible", (s32)Waypoints_Always_Visible) ? 1 : 0;
@@ -9628,8 +9673,15 @@ MainArgs
                     
                     if (File_Loaded)
                     {
-                        nk_layout_row_static(NK_Context, Screen_Scale.y * 30.0f, (s32)(Screen_Scale.x * 300), 1);
-                        if (nk_button_label(NK_Context, "Sort Map by Meta Data Tags")) SortMapByMetaTags();
+                        nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 3);
+                        nk_label(NK_Context, "Sort Map by Meta Data Tags: ", NK_TEXT_ALIGN_LEFT);
+                        if (nk_button_label(NK_Context, "Sort")) if(!sortMetaEdits) SortMapByMetaTags();
+                        if (nk_button_label(NK_Context, "Undo Sort")) {
+                            while(sortMetaEdits) {
+                                UndoMapEdit();
+                                sortMetaEdits--;
+                            }
+                        }
                     }
 
                     if (nk_tree_push(NK_Context, NK_TREE_TAB, "Colour Maps", NK_MINIMIZED))
@@ -9828,8 +9880,7 @@ MainArgs
                                                     Camera_Position.z = 1.0f;
 
                                                     f32 contigSizeInPixels = (f32)cont->contigMapPixels[index2];
-                                                    f32 screenWidth = (f32)width;
-                                                    
+                                                    f32 screenWidth = (f32)width;         
 
                                                     // f32 zoomLevel =(f32)(contigSizeInPixels / (screenWidth * index2));
                                                     f32 zoomLevel =(f32)(contigSizeInPixels / (screenWidth));
