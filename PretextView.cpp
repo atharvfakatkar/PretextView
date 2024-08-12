@@ -2169,6 +2169,10 @@ Mouse_Invert = 0;
 
 global_variable
 u08
+Grey_Haplotigs = 0;
+
+global_variable
+u08
 Deferred_Close_UI = 0;
 
 global_function
@@ -3728,6 +3732,9 @@ Render()
             glViewport(0, 0, (s32)width, (s32)height);
 
             f32 colour[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+            vertex vert[4];
+            u32 ptr = 0;
+            f32 barColour[4] = {1.0f, 1.0f, 1.0f, 0.5f};
 
             f32 lh = 0.0f;   
             fonsClearState(FontStash_Context);
@@ -3739,6 +3746,7 @@ Render()
 
             f32 position = 0.0f;
             f32 start = 0.0f;
+            u32 scaffId = Contigs->contigs->scaffId;
             ForLoop(Contigs->numberOfContigs)
             {
                 contig *cont = Contigs->contigs + index;
@@ -3746,6 +3754,7 @@ Render()
                 if (*cont->metaDataFlags)
                 {
                     u32 tmp = 0;
+                    bool haplotigTagged = false;
                     ForLoop2(ArrayCount(Meta_Data->tags))
                     {
                         if (*cont->metaDataFlags & ((u64)1 << index2))
@@ -3754,10 +3763,43 @@ Render()
                             ColourGenerator(index2 + 1, colour);
                             fonsSetColor(FontStash_Context, FourFloatColorToU32(*((nk_colorf *)colour)));
                             fonsDrawText(FontStash_Context, ModelXToScreen(0.5f * (position + start - 1.0f)) - (0.5f * textWidth), ModelYToScreen((0.5f * (1.0f - position - start))) - (lh * (f32)(++tmp)), (char *)Meta_Data->tags[index2], 0);
+                            
+                            // Check if the tag is "Haplotig"
+                            if (strcmp((char *)Meta_Data->tags[index2], "Haplotig") == 0)
+                            {
+                                haplotigTagged = true;
+                            }
                         }
+                    }
+
+                    if (haplotigTagged && Grey_Haplotigs)
+                    {
+                        vert[0].x = ModelXToScreen(start - 0.5f);
+                        vert[0].y = ModelYToScreen(0.5f - start);
+                        vert[1].x = ModelXToScreen(start - 0.5f);
+                        vert[1].y = ModelYToScreen(0.5f - position);
+                        vert[2].x = ModelXToScreen(position - 0.5f);
+                        vert[2].y = ModelYToScreen(0.5f - position);
+                        vert[3].x = ModelXToScreen(position - 0.5f);
+                        vert[3].y = ModelYToScreen(0.5f - start);
+
+                        ColourGenerator((u32)scaffId, (f32 *)barColour);
+                        u32 colour = FourFloatColorToU32(*((nk_colorf *)barColour));
+
+                        glUseProgram(Flat_Shader->shaderProgram);
+                        glUniform4fv(Flat_Shader->colorLocation, 1, (GLfloat *)&barColour);
+
+                        glBindBuffer(GL_ARRAY_BUFFER, Scaff_Bar_Data->vbos[ptr]);
+                        glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
+                        glBindVertexArray(Scaff_Bar_Data->vaos[ptr++]);
+                        glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
+
+                        glUseProgram(UI_Shader->shaderProgram);
+                        fonsSetColor(FontStash_Context, colour);
                     }
                 }
                 start = position;
+                scaffId = cont->scaffId;
             }
 
             if (MetaData_Edit_Mode && !UI_On)
@@ -9598,6 +9640,9 @@ MainArgs
                     }
 
                     Mouse_Invert = nk_check_label(NK_Context, "Invert Mouse Buttons", (s32)Mouse_Invert) ? 1 : 0;
+
+                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
+                    Grey_Haplotigs = nk_check_label(NK_Context, "Grey out 'Haplotig'", (s32)Grey_Haplotigs) ? 1 : 0;
 
                     nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
                     nk_label(NK_Context, "Gamma Min", NK_TEXT_LEFT);
