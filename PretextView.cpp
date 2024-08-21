@@ -418,6 +418,10 @@ u32
 Redisplay = 0;
 
 global_variable
+u08
+hztwaypoints = 0;
+
+global_variable
 s32
 Window_Width, Window_Height, FrameBuffer_Width, FrameBuffer_Height;
 
@@ -2169,7 +2173,7 @@ Mouse_Invert = 0;
 
 global_variable
 u08
-Grey_Haplotigs = 0;
+Grey_Haplotigs = 1;
 
 global_variable
 u08
@@ -2231,14 +2235,25 @@ Mouse(GLFWwindow* window, s32 button, s32 action, s32 mods)
         }
         else if (button == primaryMouse && Waypoint_Edit_Mode && action == GLFW_PRESS)
         {
-            AddWayPoint(Tool_Tip_Move.worldCoords);
-            MouseMove(window, x, y);
+            if(hztwaypoints) 
+            {
+                AddWayPoint(Tool_Tip_Move.worldCoords, 0);
+                MouseMove(window, x, y);
+            }
+            else
+            {
+                AddWayPoint(Tool_Tip_Move.worldCoords);
+                MouseMove(window, x, y);
+            }
         }
-        else if (button == secondaryMouse && Waypoint_Edit_Mode && action == GLFW_PRESS)
-        {
-            AddWayPoint(Tool_Tip_Move.worldCoords, 0);
-            MouseMove(window, x, y);
-        }
+        // else if (button == primaryMouse && Waypoint_Edit_Mode && action == GLFW_PRESS)
+        // {
+        //     if(hztwaypoints) 
+        //     {
+        //         AddWayPoint(Tool_Tip_Move.worldCoords, 0);
+        //         MouseMove(window, x, y);
+        //     }
+        // }
         else if (button == GLFW_MOUSE_BUTTON_MIDDLE && Waypoint_Edit_Mode && action == GLFW_PRESS)
         {
             if (Selected_Waypoint)
@@ -3461,10 +3476,10 @@ Render()
                 char *helpText1 = (char *)"Waypoint Edit Mode";
                 char *helpText2 = (char *)"W: exit";
                 char *helpText3 = (char *)"Left Click: place";
-                char *helpText4 = (char *)"Right Click: place horizontal";
+                char *helpText4 = (char *)"Shift + Left Click: place horizontal";
                 char *helpText5 = (char *)"Middle Click / Spacebar: delete";
 
-                f32 textWidth = fonsTextBounds(FontStash_Context, 0, 0, helpText5, 0, NULL);
+                f32 textWidth = fonsTextBounds(FontStash_Context, 0, 0, helpText4, 0, NULL);
 
                 glUseProgram(Flat_Shader->shaderProgram);
                 glUniform4fv(Flat_Shader->colorLocation, 1, (f32 *)&Waypoint_Mode_Data->bg);
@@ -6725,7 +6740,7 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                     break;
 
                 case GLFW_KEY_C:
-                    if ((Extension_Mode && Extensions.head) ||(mods & GLFW_MOD_SHIFT))
+                    if ((Extensions.head))
                     {
                         TraverseLinkedList(Extensions.head, extension_node)
                         {
@@ -6754,28 +6769,30 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                     break;
 
                 case GLFW_KEY_G:
-                    if ((Extension_Mode && Extensions.head) ||(mods & GLFW_MOD_SHIFT))
+                    if ((mods & GLFW_MOD_SHIFT))
                     {
-                        TraverseLinkedList(Extensions.head, extension_node)
+                        Grid->on = !Grid->on;
+                        break;
+                    }
+                    else
+                    {   
+                        if ((Extensions.head))
                         {
-                            switch (node->type)
+                            TraverseLinkedList(Extensions.head, extension_node)
                             {
-                                case extension_graph:
+                                switch (node->type)
                                 {
-                                    
-                                    graph *gph = (graph *)node->extension;
-                                    if (strcmp((char *)gph->name, "gap") == 0) {
-                                        gph->on = !gph->on;
-                                        break;
+                                    case extension_graph:
+                                    {       
+                                        graph *gph = (graph *)node->extension;
+                                        if (strcmp((char *)gph->name, "gap") == 0) {
+                                            gph->on = !gph->on;
+                                            break;
+                                        }
                                     }
                                 }
                             }
                         }
-                        break;
-                    }
-                    else
-                    {
-                        Grid->on = !Grid->on;
                     }
                     break;
 
@@ -6807,6 +6824,15 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                     }
                     else if (Edit_Mode) Edit_Pixels.scaffSelecting = action != GLFW_RELEASE;
                     else keyPressed = 0;
+                    
+                    if (action == GLFW_PRESS)
+                    {
+                        hztwaypoints = 1;
+                    }
+                    else if (action == GLFW_RELEASE)
+                    {
+                        hztwaypoints = 0;
+                    }
                     break;
 
                 case GLFW_KEY_D:
@@ -6846,7 +6872,6 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                             {
                                 case extension_graph:
                                 {
-                                    
                                     graph *gph = (graph *)node->extension;
                                     if (strcmp((char *)gph->name, "repeat_density") == 0) {
                                         gph->on = !gph->on;
@@ -7886,7 +7911,7 @@ SetSaveStatePaths()
 
 global_variable
 u08
-SaveState_Magic[5] = {'p', 't', 's', 'x', 3};
+SaveState_Magic[5] = {'p', 't', 's', 'x', 8};
 
 global_variable
 u08
@@ -8083,14 +8108,15 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
 
         // edits
         {
+            //undo-sort for sort meta data tags
+            // ForLoop(2)
+            // {
+            //     *fileWriter++ = ((u08 *)&sortMetaEdits)[index];
+            // }
+
             ForLoop(4)
             {
                 *fileWriter++ = ((u08 *)&nEdits)[index];
-            }
-
-            ForLoop(2)
-            {
-                *fileWriter++ = ((u08 *)&sortMetaEdits)[index];
             }
 
             u32 editStackPtr = Map_Editor->editStackPtr == nEdits ? 0 : Map_Editor->editStackPtr;
@@ -8327,6 +8353,8 @@ u08
 LoadState(u64 headerHash, char *path)
 {
     u08 oldStyle = 0;
+    // u08 newStyle = 0;
+
     if (!path && !SaveState_Path)
     {
         SetSaveStatePaths();
@@ -8364,7 +8392,10 @@ LoadState(u64 headerHash, char *path)
                         }
                         else
                         {
-                            oldStyle = magicTest[sizeof(magicTest) - 1] == '2';
+                            oldStyle = (magicTest[sizeof(SaveState_Magic) - 1] == '2') || (magicTest[sizeof(SaveState_Magic) - 1] == '3');
+
+                            // newStyle = (magicTest[sizeof(SaveState_Magic) - 1] == '8');
+
                             u64 hashTest;
                             bytesRead = (u32)fread(&hashTest, 1, sizeof(hashTest), file);
                             if (!(bytesRead == sizeof(hashTest) && hashTest == headerHash))
@@ -8644,22 +8675,19 @@ LoadState(u64 headerHash, char *path)
                 {
                     u32 nEdits  = Min(Edits_Stack_Size, Map_Editor->nEdits);
                     ForLoop(nEdits) UndoMapEdit();
+                    
+                    //undo-sort for sort meta data tags
+                    // if(newStyle)
+                    // {
+                    //     ForLoop(2)
+                    //     {
+                    //         ((u08 *)&sortMetaEdits)[index] = *fileContents++;
+                    //     } 
+                    //     nBytesRead += 2;
+                    // }
 
                     ForLoop(4) ((u08 *)&nEdits)[index] = *fileContents++;
                     nBytesRead += 4;
-                    
-                    try
-                    {
-                        if(!oldStyle)
-                        {
-                            ForLoop(2) ((u08 *)&sortMetaEdits)[index] = *fileContents++;
-                            nBytesRead += 2;
-                        }
-                    }
-                    catch(...)
-                    {
-                        printf("Error loading the Edits!!");
-                    }
 
                     u08 *contigFlags = fileContents + (12 * nEdits);
                     u32 nContigFlags = ((u32)nEdits + 7) >> 3;
