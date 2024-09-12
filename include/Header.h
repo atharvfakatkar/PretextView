@@ -1247,3 +1247,50 @@ NextPrime(u32 N)
 
    return(N); 
 } 
+
+// #define MAX_MAP_SIZE 20
+
+// typedef struct {
+//     u32 *key;
+//     u08 value;
+// } MapEntry;
+
+// typedef struct {
+//     MapEntry entries[MAX_MAP_SIZE];
+//     u32 size;
+// } Map;
+
+// // Function to initialize the map
+// void initialize_map(Map *map) {
+//     map->size = 0;
+// }
+
+// // Function to insert or update an entry in the map
+// void map_insert(Map *map, const u32 *key, u08 value) {
+//     for (int i = 0; i < map->size; i++) {
+//         if (strcmp(map->entries[i].key, key) == 0) {
+//             map->entries[i].value = value;  // Update existing entry
+//             return;
+//         }
+//     }
+//     if (map->size < MAX_MAP_SIZE) {
+//         map->entries[map->size].key = strdup(key);  // Copy the key
+//         map->entries[map->size].value = value;
+//         map->size++;
+//     } else {
+//         // Handle map full error
+//         printf("Map is full, cannot insert new entry.\n");
+//     }
+// }
+
+// // Function to get a value by key
+// u08 map_get(Map *map, const u32 *key, u08 *found) {
+//     for (int i = 0; i < map->size; i++) {
+//         if (strcmp(map->entries[i].key, key) == 0) {
+//             *found = 1;
+//             return map->entries[i].value;
+//         }
+//     }
+//     *found = 0;
+//     return -1;  // Key not found
+// }

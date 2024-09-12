@@ -454,6 +454,115 @@ void
 SetTheme(struct nk_context *ctx, enum theme theme);
 
 global_variable
+f32
+bgcolor [][4] =
+{
+    {0.2f, 0.6f, 0.4f, 1.0f},       // original
+    {0.922f, 0.635f, 0.369f, 1.0f},  // jasper (orange)
+    {0.62f, 0.482f, 0.71f, 1.0f},   // heather (lavender)
+    {0.29f, 0.545f, 0.659f, 1.0f},  // Carolina (blue)
+    {1.0f, 1.0f, 1.0f, 1.0f},       // white
+    {0.765f, 0.765f, 0.765f, 1.0f},  //Grey
+    {0.0f, 0.0f, 0.0f, 1.0f}        // Black
+};
+
+global_variable
+char *
+bg_color[] =
+{
+    "Classic",
+    "Jasper",
+    "Heather",
+    "Carolina",
+    "White",
+    "Grey",
+    "Black"
+};
+
+global_variable
+u08
+active_bgcolor = 0;
+
+struct
+metaoutline
+{
+    u08 on;
+    u08 color;
+};
+
+struct metaoutline global_meta_outline = {1, 0};
+
+global_variable
+metaoutline *
+meta_outline = &global_meta_outline;
+
+global_variable
+u08
+default_metadata_colorProfile = 0;
+
+global_variable
+u08
+meta_data_curcolorProfile = default_metadata_colorProfile;
+
+global_variable
+f32
+meta_dataColors[][3] =
+{
+    {1.666f, 2.666f, 3.666f},  //original
+    {2.666f, 1.666f, 3.666f},  
+    {3.666f, 2.666f, 1.666f},  
+    {5.666f, 3.666f, 2.666f}
+};
+
+global_variable
+char *
+metaColors[] =
+{
+    "Profile 1",
+    "Profile 2",
+    "Profile 3",
+    "Profile 4"
+};
+
+global_variable
+char *
+outlineColors[] =
+{
+    "No-Outline",
+    "Black",
+    "White"
+};
+
+global_variable
+u08
+activeGraphColour = 0;
+
+global_variable
+nk_colorf
+graphColors[] = 
+{
+    {0.1f, 0.8f, 0.7f, 1.0f},       //Default
+    {1.0f, 0.341f, 0.2f, 1.0f},       //Vermillion
+    {0.137f, 0.451f, 0.882f, 1.0f},        //essence (vibrant blue)
+    {0.706f, 0.0f, 1.0f, 1.0f}            //Drystorm (purple)
+};
+
+global_variable
+char *
+colour_graph[] = 
+{
+    "Default",
+    "Vermillion",
+    "Blue",
+    "Purple"
+};
+
+
+global_variable
+nk_colorf
+DefaultGraphColour = graphColors[activeGraphColour];
+
+global_variable
 nk_context *
 NK_Context;
 
@@ -2246,14 +2355,7 @@ Mouse(GLFWwindow* window, s32 button, s32 action, s32 mods)
                 MouseMove(window, x, y);
             }
         }
-        // else if (button == primaryMouse && Waypoint_Edit_Mode && action == GLFW_PRESS)
-        // {
-        //     if(hztwaypoints) 
-        //     {
-        //         AddWayPoint(Tool_Tip_Move.worldCoords, 0);
-        //         MouseMove(window, x, y);
-        //     }
-        // }
+
         else if (button == GLFW_MOUSE_BUTTON_MIDDLE && Waypoint_Edit_Mode && action == GLFW_PRESS)
         {
             if (Selected_Waypoint)
@@ -2493,13 +2595,39 @@ global_function
 void
 ColourGenerator(u32 index, f32 *rgb)
 {
-#define RedFreq 1.666f
-#define GreenFreq 2.666f
-#define BlueFreq 3.666f
+    f32 RedFreq = meta_dataColors[meta_data_curcolorProfile][0];
+    f32 GreenFreq = meta_dataColors[meta_data_curcolorProfile][1];
+    f32 BlueFreq = meta_dataColors[meta_data_curcolorProfile][2];
 
     rgb[0] = 0.5f * (sinf((f32)index * RedFreq) + 1.0f);
     rgb[1] = 0.5f * (sinf((f32)index * GreenFreq) + 1.0f);
     rgb[2] = 0.5f * (sinf((f32)index * BlueFreq) + 1.0f);
+}
+
+void DrawOutlinedText(FONScontext* FontStash_Context, nk_colorf* colour, const char* text, f32 x, f32 y) {
+    
+    nk_colorf outlineColor;
+    if(meta_outline->on == 2) {
+        outlineColor = {1.0f, 1.0f, 1.0f, 1.0f};
+    }
+    else {
+        outlineColor = {0.0f, 0.0f, 0.0f, 1.0f};
+    }
+
+    unsigned int outlineColorU32 = FourFloatColorToU32(outlineColor);
+    unsigned int textColorU32 = FourFloatColorToU32(*colour);
+
+    f32 offset = 1.0f; // Offset for the outline
+
+    fonsSetColor(FontStash_Context, outlineColorU32);
+    fonsDrawText(FontStash_Context, x - offset, y - offset, text, 0);
+    fonsDrawText(FontStash_Context, x + offset, y - offset, text, 0);
+    fonsDrawText(FontStash_Context, x - offset, y + offset, text, 0);
+    fonsDrawText(FontStash_Context, x + offset, y + offset, text, 0);
+
+    // // Draw the original text on top
+    fonsSetColor(FontStash_Context, textColorU32);
+    fonsDrawText(FontStash_Context, x, y, text, 0);
 }
 
 struct
@@ -2516,6 +2644,7 @@ graph
     u16 on;
     u16 nameOn;
     nk_colorf colour;
+    u08 activecolor;
 };
 
 enum
@@ -2570,6 +2699,10 @@ AddExtension(extension_node *node)
 }
 
 global_function
+u08
+UserLoadState(char *, char *);
+
+global_function
 void
 Render()
 {
@@ -2578,7 +2711,13 @@ Render()
     f32 height;
     {
         glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(0.2f, 0.6f, 0.4f, 1.0f);
+        glClearColor(bgcolor[active_bgcolor][0], bgcolor[active_bgcolor][1], bgcolor[active_bgcolor][2], bgcolor[active_bgcolor][3]);
+
+        // glClearColor(0.2f, 0.6f, 0.4f, 1.0f);    //original
+        // glClearColor(0.8f, 0.6f, 0.4f, 1.0f);   //orange
+        // glClearColor(0.62f, 0.482f, 0.71f, 1.0f);   //heather(lavender)
+        // glClearColor(0.341f, 0.678f, 0.827f, 1.0f);
+        // glClearColor(0.29f, 0.545f, 0.659f, 1.0f);    //carolina(blue)
 
         s32 viewport[4];
         glGetIntegerv (GL_VIEWPORT, viewport);
@@ -3776,8 +3915,20 @@ Render()
                         {
                             f32 textWidth = fonsTextBounds(FontStash_Context, 0, 0, (char *)Meta_Data->tags[index2], 0, NULL);
                             ColourGenerator(index2 + 1, colour);
-                            fonsSetColor(FontStash_Context, FourFloatColorToU32(*((nk_colorf *)colour)));
-                            fonsDrawText(FontStash_Context, ModelXToScreen(0.5f * (position + start - 1.0f)) - (0.5f * textWidth), ModelYToScreen((0.5f * (1.0f - position - start))) - (lh * (f32)(++tmp)), (char *)Meta_Data->tags[index2], 0);
+
+                            if(meta_outline->on) {
+                                //position of text
+                                f32 textX = ModelXToScreen(0.5f * (position + start - 1.0f)) - (0.5f * textWidth);
+                                f32 textY = ModelYToScreen((0.5f * (1.0f - position - start))) - (lh * (f32)(++tmp));
+
+                                DrawOutlinedText(FontStash_Context, (nk_colorf*)colour, (char*)Meta_Data->tags[index2], textX, textY);
+                            }
+                            else
+                            {
+                                fonsSetColor(FontStash_Context, FourFloatColorToU32(*((nk_colorf *)colour)));
+                                fonsDrawText(FontStash_Context, ModelXToScreen(0.5f * (position + start - 1.0f)) - (0.5f * textWidth), ModelYToScreen((0.5f * (1.0f - position - start))) - (lh * (f32)(++tmp)), (char *)Meta_Data->tags[index2], 0);
+
+                            }
                             
                             // Check if the tag is "Haplotig"
                             if (strcmp((char *)Meta_Data->tags[index2], "Haplotig") == 0)
@@ -4732,6 +4883,7 @@ global_function
 u08
 LoadState(u64 headerHash, char *path = 0);
 
+
 global_function
 load_file_result
 LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *headerHash)
@@ -5314,7 +5466,7 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
     {
         PushGenericBuffer(&Scaff_Bar_Data, Max_Number_of_Contigs);
     }
-
+    UserLoadState("userprofile", 0);
     // Extensions
     {
         u32 exIndex = 0;
@@ -5328,11 +5480,11 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
 #define DefaultGraphScale 0.2f
 #define DefaultGraphBase 32.0f
 #define DefaultGraphLineSize 1.0f
-#define DefaultGraphColour {0.1f, 0.8f, 0.7f, 1.0f}
+// #define DefaultGraphColour {1.0f, 0.341f, 0.2f, 1.0f}
                         gph->scale = DefaultGraphScale;
                         gph->base = DefaultGraphBase;
                         gph->lineSize = DefaultGraphLineSize;
-                        gph->colour = DefaultGraphColour;
+                        gph->colour = graphColors[0];
                         gph->on = 0;
 
                         gph->shader = PushStructP(arena, editable_plot_shader);
@@ -5447,6 +5599,8 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
     FenceIn(File_Loaded = 1);
 
     if (LoadState(*headerHash)) LoadState(*headerHash + 1);
+    UserLoadState("userprofile", 0);
+
     return(ok);
 }
 
@@ -6740,7 +6894,7 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                     break;
 
                 case GLFW_KEY_C:
-                    if ((Extensions.head))
+                    if (Extensions.head)
                     {
                         TraverseLinkedList(Extensions.head, extension_node)
                         {
@@ -6769,37 +6923,35 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                     break;
 
                 case GLFW_KEY_G:
-                    if ((mods & GLFW_MOD_SHIFT))
+                    TraverseLinkedList(Extensions.head, extension_node)
                     {
-                        Grid->on = !Grid->on;
-                        break;
-                    }
-                    else
-                    {   
-                        if ((Extensions.head))
+                        switch (node->type)
                         {
-                            TraverseLinkedList(Extensions.head, extension_node)
+                            case extension_graph:
                             {
-                                switch (node->type)
-                                {
-                                    case extension_graph:
-                                    {       
-                                        graph *gph = (graph *)node->extension;
-                                        if (strcmp((char *)gph->name, "gap") == 0) {
-                                            gph->on = !gph->on;
-                                            break;
-                                        }
-                                    }
+                                
+                                graph *gph = (graph *)node->extension;
+                                if (strcmp((char *)gph->name, "gap") == 0) {
+                                    gph->on = !gph->on;
+                                    break;
                                 }
                             }
                         }
                     }
+                    break;
+                
+                case GLFW_KEY_L:
+                    Grid->on = !Grid->on;
                     break;
 
                 case GLFW_KEY_S:
                     if (Edit_Mode)
                     {
                         Edit_Pixels.snap = !Edit_Pixels.snap;
+                    }
+                    else if (mods & GLFW_MOD_SHIFT)
+                    {
+                        Scaffs_Always_Visible = Scaffs_Always_Visible ? 0 : 1;
                     }
                     else
                     {
@@ -6824,7 +6976,7 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                     }
                     else if (Edit_Mode) Edit_Pixels.scaffSelecting = action != GLFW_RELEASE;
                     else keyPressed = 0;
-                    
+
                     if (action == GLFW_PRESS)
                     {
                         hztwaypoints = 1;
@@ -7752,6 +7904,180 @@ resources, click each entry to view its licence.)text";
 }
 
 global_function
+u08
+UserSaveState(char *, u08, char *);
+
+global_variable
+char
+profile_savebuff[1024] = {0};
+
+
+global_function
+u08
+UserProfileEditorRun(const char *name, struct file_browser *browser, struct nk_context *ctx, u32 show, u08 save = 0)
+{      
+    struct nk_window *window = nk_window_find(ctx, name);
+    u32 doesExist = window != 0;
+
+    if (!show && !doesExist)
+    {
+        return(0);
+    }
+
+    if (show && doesExist && (window->flags & NK_WINDOW_HIDDEN))
+    {
+        window->flags &= ~(nk_flags)NK_WINDOW_HIDDEN;
+        FileBrowserReloadDirectoryContent(browser, browser->directory);
+    }
+
+    u08 ret = 0;
+    struct media *media = browser->media;
+    struct nk_rect total_space;
+
+    if (nk_begin(ctx, name, nk_rect(Screen_Scale.x * 50, Screen_Scale.y * 50, Screen_Scale.x * 830, Screen_Scale.y * 600),
+                NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_TITLE|NK_WINDOW_CLOSABLE|NK_WINDOW_SCALABLE))
+    {
+        
+        nk_layout_row_dynamic(ctx, Screen_Scale.y * 30.0f, 1);
+
+        // nk_edit_string_zero_terminated(NK_Context, NK_EDIT_FIELD, profile_savebuff, sizeof(profile_savebuff) - 1, nk_filter_default);
+
+        // if (nk_button_label(ctx, "Save"))
+        // {
+        //     UserSaveState(profile_savebuff, 1, 0);
+        // }        
+
+        if (nk_button_label(ctx, "Save"))
+        {
+            UserSaveState("userprofile", 1, 0);
+        }    
+
+        nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 4);
+
+        if (Extensions.head)
+        {
+            //extensions
+            if (nk_tree_push(NK_Context, NK_TREE_TAB, "Extensions", NK_MINIMIZED))
+
+            {
+                char buff[128];
+
+                nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 1);
+                
+                TraverseLinkedList(Extensions.head, extension_node)
+                {
+                    switch (node->type)
+                    {
+                        case extension_graph:
+                        {
+                            graph *gph = (graph *)node->extension;
+
+                            stbsp_snprintf(buff, sizeof(buff), "Graph: %s", (char *)gph->name);
+
+                            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 5);
+                            gph->on = nk_check_label(NK_Context, buff, (s32)gph->on) ? 1 : 0;
+
+                            u08 currselection = gph->activecolor;  // Start with the graph's current color selection
+                            
+                            ForLoop(4)
+                            {
+                                // Update currselection based on user choice in nk_option_label
+                                if (nk_option_label(NK_Context, colour_graph[index], currselection == index))
+                                {
+                                    currselection = index;
+                                }
+                            }
+
+                            if (currselection != gph->activecolor)
+                            {
+                                gph->activecolor = currselection;
+                                gph->colour = graphColors[gph->activecolor];
+                            }
+                        } break;
+                    }
+                }
+
+                nk_tree_pop(NK_Context);
+            }
+
+        }
+
+        //metadata tags
+        if (nk_tree_push(NK_Context, NK_TREE_TAB, "MetaData Tags", NK_MINIMIZED))
+        {
+            char buff[128];
+            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
+
+            u08 select = meta_outline->on;
+
+            ForLoop(3)
+            {
+                if (nk_option_label(NK_Context, outlineColors[index], select == index))
+                {
+                    select = index;
+                }
+            }
+            if (meta_outline->on != select)
+            {
+                meta_outline->on = select;
+            }
+
+            meta_outline->on = select;
+            if (nk_tree_push(NK_Context, NK_TREE_TAB, "Color profiles", NK_MINIMIZED))
+            {
+                char buff[128];                    
+                u08 selection = meta_data_curcolorProfile;
+
+                ForLoop(4)
+                {
+                    // Update currselection based on user choice in nk_option_label
+                    if (nk_option_label(NK_Context, metaColors[index], selection == index))
+                    {
+                        selection = index;
+                    }
+                }
+
+                if (meta_data_curcolorProfile != selection)
+                {
+                    meta_data_curcolorProfile = selection;
+                }
+
+                nk_tree_pop(NK_Context);
+            }
+            nk_tree_pop(NK_Context);
+        }
+
+        if (nk_tree_push(NK_Context, NK_TREE_TAB, "Background Colour", NK_MINIMIZED))
+                {
+                    char buff[128];                    
+                    u08 selection = active_bgcolor;
+
+                    ForLoop(7)
+                    {
+                        // Update currselection based on user choice in nk_option_label
+                        if (nk_option_label(NK_Context, bg_color[index], selection == index))
+                        {
+                            selection = index;
+                        }
+                    }
+
+                    if (active_bgcolor != selection)
+                    {
+                        active_bgcolor = selection;
+                    }
+
+                    nk_tree_pop(NK_Context);
+                }
+                nk_tree_pop(NK_Context);
+        
+        nk_style_set_font(ctx, &NK_Font->handle);
+    }
+    nk_end(ctx);
+    
+    return(ret);
+}
+
+global_function
 struct nk_image
 IconLoad(u08 *buffer, u32 bufferSize)
 {
@@ -8119,6 +8445,12 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
                 *fileWriter++ = ((u08 *)&nEdits)[index];
             }
 
+            //to store sort meta tags edits
+            // ForLoop(2)
+            // {
+            //     *fileWriter++ = ((u08 *)&sortMetaEdits)[index];
+            // }
+
             u32 editStackPtr = Map_Editor->editStackPtr == nEdits ? 0 : Map_Editor->editStackPtr;
             u32 nContigFlags = (nEdits + 7) >> 3;
             u08 *contigFlags = fileWriter + (12 * nEdits);
@@ -8392,10 +8724,7 @@ LoadState(u64 headerHash, char *path)
                         }
                         else
                         {
-                            oldStyle = (magicTest[sizeof(SaveState_Magic) - 1] == '2') || (magicTest[sizeof(SaveState_Magic) - 1] == '3');
-
-                            // newStyle = (magicTest[sizeof(SaveState_Magic) - 1] == '8');
-
+                            oldStyle = magicTest[sizeof(magicTest) - 1] == '2' || magicTest[sizeof(magicTest) - 1] == '3';
                             u64 hashTest;
                             bytesRead = (u32)fread(&hashTest, 1, sizeof(hashTest), file);
                             if (!(bytesRead == sizeof(hashTest) && hashTest == headerHash))
@@ -8688,6 +9017,20 @@ LoadState(u64 headerHash, char *path)
 
                     ForLoop(4) ((u08 *)&nEdits)[index] = *fileContents++;
                     nBytesRead += 4;
+                    
+                    //load sort meta edits 
+                    // try
+                    // {
+                    //     if(!oldStyle)
+                    //     {
+                    //         ForLoop(2) ((u08 *)&sortMetaEdits)[index] = *fileContents++;
+                    //         nBytesRead += 2;
+                    //     }
+                    // }
+                    // catch(...)
+                    // {
+                    //     printf("Error loading the Edits!!");
+                    // }
 
                     u08 *contigFlags = fileContents + (12 * nEdits);
                     u32 nContigFlags = ((u32)nEdits + 7) >> 3;
@@ -8902,6 +9245,449 @@ LoadState(u64 headerHash, char *path)
 
     return(0);
 }
+
+//User Profile
+global_variable
+u08 *
+UserSaveState_Path = 0;
+
+global_variable
+u08 *
+UserSaveState_Name = 0;
+
+global_function
+void
+UserSetSaveStatePaths()
+{
+    if (!UserSaveState_Path)
+    {
+        char buff_[64];
+        char *buff = (char *)buff_;
+#ifndef _WIN32
+        char sep = '/';
+        const char *path = getenv("XDG_CONFIG_HOME");
+        char *folder;
+        char *folder2;
+        if (path)
+        {
+            folder = (char *)"PretextView";
+            folder2 = 0;
+        }
+        else
+        {
+            path = getenv("HOME");
+            if (!path) path = getpwuid(getuid())->pw_dir;
+            folder = (char *)".config";
+            folder2 = (char *)"PretextView";
+        }
+
+        if (path)
+        {
+            while ((*buff++ = *path++)) {}
+            *(buff - 1) = sep;
+            while ((*buff++ = *folder++)) {}
+
+            mkdir((char *)buff_, 0700);
+            struct stat st = {};
+
+            u32 goodPath = 0;
+
+            if (!stat((char *)buff_, &st))
+            {
+                if (folder2)
+                {
+                    *(buff - 1) = sep;
+                    while ((*buff++ = *folder2++)) {}
+
+                    mkdir((char *)buff_, 0700);
+                    if (!stat((char *)buff_, &st))
+                    {
+                        goodPath = 1;
+                    }
+                }
+                else
+                {
+                    goodPath = 1;
+                }
+            } 
+            
+            if (goodPath)
+            {
+                u32 n = StringLength((u08 *)buff_);
+                UserSaveState_Path = PushArray(Working_Set, u08, n + 18);
+                CopyNullTerminatedString((u08 *)buff_, UserSaveState_Path);
+                UserSaveState_Path[n] = (u08)sep;
+                UserSaveState_Name = UserSaveState_Path + n + 1;
+                UserSaveState_Path[n + 17] = 0;
+            }
+        }
+#else
+        PWSTR path = 0;
+        char sep = '\\';
+        HRESULT hres = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, 0, &path);
+        if (SUCCEEDED(hres))
+        {
+            PWSTR pathPtr = path;
+            while ((*buff++ = *pathPtr++)) {}
+            *(buff - 1) = sep;
+            char *folder = (char *)"PretextView";
+            while ((*buff++ = *folder++)) {}
+
+            if (CreateDirectory((char *)buff_, NULL) || ERROR_ALREADY_EXISTS == GetLastError())
+            {
+                u32 n = StringLength((u08*)buff_);
+                UserSaveState_Path = PushArray(Working_Set, u08, n + 18);
+                CopyNullTerminatedString((u08*)buff_, UserSaveState_Path);
+                UserSaveState_Path[n] = (u08)sep;
+                UserSaveState_Name = UserSaveState_Path + n + 1;
+                UserSaveState_Path[n + 17] = 0;
+            }
+        }
+
+        if (path) CoTaskMemFree(path);
+#endif
+    }
+}
+
+
+// global_function
+// void
+// UserSetSaveStatePaths()
+// {
+//     if (!UserSaveState_Path)
+//     {
+//         char buff_[64];
+//         char *buff = (char *)buff_;
+// #ifndef _WIN32
+//         char sep = '/';
+//         const char *path = getenv("XDG_CONFIG_HOME");
+//         char *folder;
+//         char *folder2;
+//         char *userprofile = (char *)"userprofile";  // New folder name
+
+//         if (path)
+//         {
+//             folder = (char *)"PretextView";
+//             folder2 = 0;
+//         }
+//         else
+//         {
+//             path = getenv("HOME");
+//             if (!path) path = getpwuid(getuid())->pw_dir;
+//             folder = (char *)".config";
+//             folder2 = (char *)"PretextView";
+//         }
+
+//         if (path)
+//         {
+//             while ((*buff++ = *path++)) {}
+//             *(buff - 1) = sep;
+//             while ((*buff++ = *folder++)) {}
+
+//             mkdir((char *)buff_, 0700);
+//             struct stat st = {};
+
+//             u32 goodPath = 0;
+
+//             if (!stat((char *)buff_, &st))
+//             {
+//                 if (folder2)
+//                 {
+//                     *(buff - 1) = sep;
+//                     while ((*buff++ = *folder2++)) {}
+
+//                     mkdir((char *)buff_, 0700);
+//                     if (!stat((char *)buff_, &st))
+//                     {
+//                         *(buff - 1) = sep;
+//                         while ((*buff++ = *userprofile++)) {}  // Create userprofile folder
+
+//                         mkdir((char *)buff_, 0700);
+//                         if (!stat((char *)buff_, &st))
+//                         {
+//                             goodPath = 1;
+//                         }
+//                     }
+//                 }
+//                 else
+//                 {
+//                     *(buff - 1) = sep;
+//                     while ((*buff++ = *userprofile++)) {}  // Create userprofile folder
+
+//                     mkdir((char *)buff_, 0700);
+//                     if (!stat((char *)buff_, &st))
+//                     {
+//                         goodPath = 1;
+//                     }
+//                 }
+//             }
+
+//             if (goodPath)
+//             {
+//                 u32 n = StringLength((u08 *)buff_);
+//                 UserSaveState_Path = PushArray(Working_Set, u08, n + 18);
+//                 CopyNullTerminatedString((u08 *)buff_, UserSaveState_Path);
+//                 UserSaveState_Path[n] = (u08)sep;
+//                 UserSaveState_Name = UserSaveState_Path + n + 1;
+//                 UserSaveState_Path[n + 17] = 0;
+//             }
+//         }
+// #else
+//         PWSTR path = 0;
+//         char sep = '\\';
+//         HRESULT hres = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, 0, &path);
+//         if (SUCCEEDED(hres))
+//         {
+//             PWSTR pathPtr = path;
+//             while ((*buff++ = *pathPtr++)) {}
+//             *(buff - 1) = sep;
+//             char *folder = (char *)"PretextView";
+//             while ((*buff++ = *folder++)) {}
+
+//             if (CreateDirectory((char *)buff_, NULL) || ERROR_ALREADY_EXISTS == GetLastError())
+//             {
+//                 *(buff - 1) = sep;
+//                 char *userprofile = (char *)"userprofile";  // New folder name
+//                 while ((*buff++ = *userprofile++)) {}  // Create userprofile folder
+
+//                 if (CreateDirectory((char *)buff_, NULL) || ERROR_ALREADY_EXISTS == GetLastError())
+//                 {
+//                     u32 n = StringLength((u08 *)buff_);
+//                     UserSaveState_Path = PushArray(Working_Set, u08, n + 18);
+//                     CopyNullTerminatedString((u08 *)buff_, UserSaveState_Path);
+//                     UserSaveState_Path[n] = (u08)sep;
+//                     UserSaveState_Name = UserSaveState_Path + n + 1;
+//                     UserSaveState_Path[n + 17] = 0;
+//                 }
+//             }
+//         }
+
+//         if (path) CoTaskMemFree(path);
+// #endif
+//     }
+// }
+
+
+// global_variable
+// u08
+// UserSaveState_Magic[5] = {'p', 't', 's', 'x', 3};
+
+// global_variable
+// u08
+// UserSaveState_Magic_Tail_Auto = 2;
+
+// global_variable
+// u08
+// UserSaveState_Magic_Tail_Manual = 3;
+
+global_function
+u08
+UserSaveState(char *headerHash = "userprofile", u08 overwrite = 1, char *path = 0)
+{
+    // char tmpbuff[1024];
+    // strcpy(tmpbuff, "userprofile-");
+    // strcat(tmpbuff, headerHash);
+
+    if (!UserSaveState_Path)
+    {
+        UserSetSaveStatePaths();
+    }
+
+    char filePath[MAX_PATH_LEN];
+    if (!path)
+    {
+        snprintf(filePath, sizeof(filePath), "%s%s", UserSaveState_Path, headerHash);
+        path = filePath;
+    }
+
+    if (!overwrite)
+    {
+        FILE *file = fopen(path, "rb");
+        if (file)
+        {
+            fclose(file);
+            return 1;  // File already exists, and overwrite is not allowed
+        }
+    }
+
+    // Open the file for writing
+    FILE *file = fopen(path, "wb");
+    if (!file)
+    {
+        return 1;  // Failed to open file
+    }
+
+
+    u16 ngphextensions = 0;
+    TraverseLinkedList(Extensions.head, extension_node)
+    {
+        switch (node->type)
+        {
+            case extension_graph:
+            {                    
+                graph *gph = (graph *)node->extension;
+                ngphextensions++;
+            }
+        }
+    }
+    fwrite(&ngphextensions, sizeof(ngphextensions), 1, file);
+
+    //Specific color for each track
+    TraverseLinkedList(Extensions.head, extension_node)
+    {
+        switch (node->type)
+        {
+            case extension_graph:
+            {
+                graph *gph = (graph *)node->extension;
+                // u32 *name = gph->name;
+                // u08 colour = (u08)gph->activecolor;
+                // fwrite(&name, sizeof(name), 1, file);
+                // fwrite(&colour, sizeof(colour), 1, file);
+
+                // Get the name length and write it first
+                u32 name_len = strlen((char *)gph->name);
+                fwrite(&name_len, sizeof(name_len), 1, file);
+
+                // Write the name string data
+                fwrite(gph->name, sizeof(char), name_len, file);
+
+                // Write the color data
+                u08 colour = (u08)gph->activecolor;
+                fwrite(&colour, sizeof(colour), 1, file);
+            }
+        }
+    }
+
+    //metadata tags color profile
+    fwrite(&meta_data_curcolorProfile, sizeof(meta_data_curcolorProfile), 1, file);
+
+    //metadata tags outline
+    fwrite(&meta_outline->on, sizeof(meta_outline->on), 1, file);
+
+    //backgound color
+    fwrite(&active_bgcolor, sizeof(active_bgcolor), 1, file);
+
+    // u08 waypointsVisible = (u08)Waypoints_Always_Visible;
+    // u08 contigLabels = (u08)Contig_Name_Labels->on;
+
+    // fwrite(&waypointsVisible, sizeof(waypointsVisible), 1, file);
+    // fwrite(&contigLabels, sizeof(contigLabels), 1, file);
+
+    fclose(file);
+    return 0;  // Success
+}
+
+
+
+global_function
+u08
+UserLoadState(char *headerHash = "userprofile", char *path = 0)
+{
+
+    // char tmpbuff[1024];
+    // strcpy(tmpbuff, "userprofile-");
+    // strcat(tmpbuff, headerHash);
+
+    if (!UserSaveState_Path)
+    {
+        UserSetSaveStatePaths();
+    }
+
+    char filePath[MAX_PATH_LEN];
+    if (!path)
+    {
+        // Concatenate the save path and headerHash (filename)
+        snprintf(filePath, sizeof(filePath), "%s%s", UserSaveState_Path, headerHash);
+        path = filePath;
+    }
+
+    // Open the file for reading
+    FILE *file = fopen(path, "rb");
+    if (!file)
+    {
+        return 1;  // Failed to open file
+    }
+
+    // Read user profile settings 
+    // u08 activecolor;
+    // fread(&activecolor, sizeof(activecolor), 1, file);
+    // activeGraphColour = (u08)activecolor;
+    TraverseLinkedList(Extensions.head, extension_node)
+    {
+        switch (node->type)
+        {
+            case extension_graph:
+            {
+                graph *gph = (graph *)node->extension;
+                
+                gph->colour = graphColors[activeGraphColour];
+            }
+            break;
+        }
+    }
+    // u08 waypointsVisible;
+    // u08 contigLabels;
+
+    u16 ngphextensions;
+    fread(&ngphextensions, sizeof(ngphextensions), 1, file);
+    u08 colour;
+    u32 *name;
+
+    ForLoop(ngphextensions)
+    {
+        u32 name_len;
+        if (fread(&name_len, sizeof(name_len), 1, file) != 1) {
+            break; 
+        }
+
+        char *name = (char *)malloc(name_len + 1); 
+        if (fread(name, sizeof(char), name_len, file) != name_len) {
+            free(name);
+            break;
+        }
+        name[name_len] = '\0';
+
+        u08 colour;
+        if (fread(&colour, sizeof(colour), 1, file) != 1) {
+            free(name);
+            break;
+        }
+
+        // Search for the graph in the current list and update its color
+        TraverseLinkedList(Extensions.head, extension_node) {
+            switch (node->type) {
+                case extension_graph: {
+                    graph *gph = (graph *)node->extension;
+
+    
+                    if (strcmp((char *)gph->name, name) == 0) {
+                        gph->activecolor = colour;
+                        gph->colour = graphColors[gph->activecolor]; 
+                        break;
+                    }
+                }
+            }
+        }
+
+        free(name);
+        
+    }
+
+    //metadata tags color profile
+    fread(&meta_data_curcolorProfile, sizeof(meta_data_curcolorProfile), 1, file);
+    
+    //metadata tags outline
+    fread(&meta_outline->on, sizeof(meta_outline->on), 1, file);
+
+    //background color
+    fread(&active_bgcolor, sizeof(active_bgcolor), 1, file);
+
+    fclose(file);
+    return 0;  // Success
+}
+
+
 
 global_variable
 u32
@@ -9257,6 +10043,7 @@ MainArgs
         MouseMove(window, mousex, mousey);
     }
     
+    UserLoadState("userprofile", 0);
     Redisplay = 1;
     char searchbuf[256] = {0};
     while (!glfwWindowShouldClose(window))
@@ -9344,6 +10131,7 @@ MainArgs
             s32 showLoadStateScreen = 0;
             s32 showSaveAGPScreen = 0;
             s32 showMetaDataTagEditor = 0;
+            s32 showUserProfileScreen = 0;
             static u32 currGroup1 = 0;
             static u32 currGroup2 = 0;
             static s32 currSelected1 = -1;
@@ -9372,7 +10160,7 @@ MainArgs
                         nk_contextual_end(NK_Context); 
                     } 
 
-                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 5);
+                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 6);
                     showFileBrowser = nk_button_label(NK_Context, "Load Map");
                     if (currFileName)
                     {
@@ -9380,6 +10168,7 @@ MainArgs
                         showLoadStateScreen = nk_button_label(NK_Context, "Load State");
                         showSaveAGPScreen = nk_button_label(NK_Context, "Generate AGP");
                     }
+                    showUserProfileScreen = nk_button_label(NK_Context, "User Profile");
                     showAboutScreen = nk_button_label(NK_Context, "About");
 
                     nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 4);
@@ -9671,6 +10460,12 @@ MainArgs
 
                     nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
                     Grey_Haplotigs = nk_check_label(NK_Context, "Grey out 'Haplotig'", (s32)Grey_Haplotigs) ? 1 : 0;
+
+                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
+                    // if(nk_button_label(NK_Context, "userprofile 1")) 
+                    // {
+                    //     showUserProfileScreen = showUserProfileScreen ? 0 : 1;
+                    // }
 
                     nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
                     nk_label(NK_Context, "Gamma Min", NK_TEXT_LEFT);
@@ -10052,7 +10847,7 @@ MainArgs
                                                             colour = nk_color_picker(NK_Context, colour, NK_RGBA);
 
                                                             nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
-                                                            if (nk_button_label(NK_Context, "Default")) colour = DefaultGraphColour;
+                                                            if (nk_button_label(NK_Context, "Default")) colour = graphColors[0];
 
                                                             gph->colour = colour;
 
@@ -10132,6 +10927,12 @@ MainArgs
                 }
 
                 AboutWindowRun(NK_Context, (u32)showAboutScreen);
+                u08 state;
+                if ((state = UserProfileEditorRun("User profile editor", &saveBrowser, NK_Context, (u32)showUserProfileScreen, 1))) 
+                {
+                    UserSaveState("trial", state & 2, saveBrowser.file);
+                    FileBrowserReloadDirectoryContent(&saveBrowser, saveBrowser.directory);
+                }
 
                 if (Deferred_Close_UI)
                 {
