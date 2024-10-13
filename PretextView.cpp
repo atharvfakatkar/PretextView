@@ -9870,40 +9870,83 @@ GenerateAGP(char *path, u08 overwrite, u08 formatSingletons, u08 preserveOrder)
     }
 }
 
-global_function
-void
-SortMapByMetaTags()
+    // global_function
+    // void
+    // SortMapByMetaTags()
+    // {
+    //     u32 nPixelToConsider = Number_of_Pixels_1D;
+    //     sortMetaEdits = 0;
+    //     for (;;)
+    //     {
+    //         u64 maxFlag = 0;
+    //         ForLoop(nPixelToConsider) maxFlag = Max(maxFlag, Map_State->metaDataFlags[index]);
+    //         if (!maxFlag) break;
+
+    //         ForLoop(nPixelToConsider)
+    //         {
+    //             u32 pixelEnd = nPixelToConsider - index - 1;
+    //             s32 delta = (s32)(Number_of_Pixels_1D - pixelEnd - 1);
+    //             if (Map_State->metaDataFlags[pixelEnd] == maxFlag)
+    //             {
+    //                 u32 pixelStart = pixelEnd;
+    //                 while (pixelStart && Map_State->metaDataFlags[pixelStart - 1] == maxFlag) --pixelStart;
+                    
+    //                 if (delta)
+    //                 {
+    //                     RearrangeMap(pixelStart, pixelEnd, delta);
+    //                     AddMapEdit(delta, {(u32)((s32)pixelStart + delta), (u32)((s32)pixelEnd + delta)}, 0);
+    //                     sortMetaEdits++;
+    //                 }
+
+    //                 nPixelToConsider -= (pixelEnd - pixelStart + 1);
+    //                 break;
+    //             }
+    //         }
+    //     }
+    // }
+
+void SortMapByMetaTags(u64 tagMask)
 {
     u32 nPixelToConsider = Number_of_Pixels_1D;
     sortMetaEdits = 0;
     for (;;)
     {
         u64 maxFlag = 0;
-        ForLoop(nPixelToConsider) maxFlag = Max(maxFlag, Map_State->metaDataFlags[index]);
-        if (!maxFlag) break;
+        bool hasRelevantFlags = false;
+        ForLoop(nPixelToConsider) 
+        {
+            u64 relevantFlags = Map_State->metaDataFlags[index] & tagMask;
+            if (relevantFlags)
+            {
+                maxFlag = Max(maxFlag, relevantFlags);
+                hasRelevantFlags = true;
+            }
+        }
+        if (!hasRelevantFlags) break;
 
         ForLoop(nPixelToConsider)
         {
             u32 pixelEnd = nPixelToConsider - index - 1;
             s32 delta = (s32)(Number_of_Pixels_1D - pixelEnd - 1);
-            if (Map_State->metaDataFlags[pixelEnd] == maxFlag)
+            u64 relevantFlags = Map_State->metaDataFlags[pixelEnd] & tagMask;
+            if (relevantFlags == maxFlag)
             {
                 u32 pixelStart = pixelEnd;
-                while (pixelStart && Map_State->metaDataFlags[pixelStart - 1] == maxFlag) --pixelStart;
-                
+                while (pixelStart && ((Map_State->metaDataFlags[pixelStart - 1] & tagMask) == maxFlag)) 
+                    --pixelStart;
                 if (delta)
                 {
                     RearrangeMap(pixelStart, pixelEnd, delta);
                     AddMapEdit(delta, {(u32)((s32)pixelStart + delta), (u32)((s32)pixelEnd + delta)}, 0);
                     sortMetaEdits++;
                 }
-
                 nPixelToConsider -= (pixelEnd - pixelStart + 1);
                 break;
             }
         }
     }
 }
+
 
 MainArgs
 {
@@ -10541,15 +10584,60 @@ MainArgs
                     
                     if (File_Loaded)
                     {
-                        nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 3);
-                        nk_label(NK_Context, "Sort Map by Meta Data Tags: ", NK_TEXT_ALIGN_LEFT);
-                        if (nk_button_label(NK_Context, "Sort")) if(!sortMetaEdits) SortMapByMetaTags();
+                        // nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 3);
+                        // nk_label(NK_Context, "Sort Map by Meta Data Tags: ", NK_TEXT_ALIGN_LEFT);
+                        // if (nk_button_label(NK_Context, "Sort")) if(!sortMetaEdits) SortMapByMetaTags();
+                        // if (nk_button_label(NK_Context, "Undo Sort")) {
+                        //     while(sortMetaEdits) {
+                        //         UndoMapEdit();
+                        //         sortMetaEdits--;
+                        //     }
+                        // }
+
+                        nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 1);
+                        nk_label(NK_Context, "Sort Map by Meta Data Tags:", NK_TEXT_ALIGN_LEFT);
+
+                        static int NUM_TAGS = sizeof(Default_Tags) / sizeof(char*);
+                        static int selected_tags[64] = {0}; // Assuming a maximum of 64 tags
+                        static int tree_state = 0;
+
+                        // Tree tab for checkboxes
+                        if (nk_tree_push(NK_Context, NK_TREE_TAB, "Select Tags", NK_MINIMIZED))
+                        {
+                            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 20.0f, 4); // Adjust layout for checkboxes
+                            for (int i = 0; i < NUM_TAGS; i++) {
+                                char tag_name[32];
+                                snprintf(tag_name, sizeof(tag_name), "%s", Default_Tags[i]);
+                                nk_checkbox_label(NK_Context, tag_name, &selected_tags[i]);
+                            }
+                            nk_tree_pop(NK_Context);
+                        }
+
+                        nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 3); // Layout for buttons
+                        if (nk_button_label(NK_Context, "Sort Selected")) {
+                            if(!sortMetaEdits) {
+                                u64 tag_mask = 0;
+                                for (int i = 0; i < NUM_TAGS; i++) {
+                                    if (selected_tags[i]) {
+                                        tag_mask |= (1ULL << i);
+                                    }
+                                }
+                                SortMapByMetaTags(tag_mask); // Pass the tag mask to the sorting function
+                            }
+                        }
+                        if (nk_button_label(NK_Context, "Sort All Tags")) {
+                            if(!sortMetaEdits) {
+                                u64 all_tags_mask = (1ULL << NUM_TAGS) - 1; // Create a mask with all bits set
+                                SortMapByMetaTags(all_tags_mask);
+                            }
+                        }
                         if (nk_button_label(NK_Context, "Undo Sort")) {
                             while(sortMetaEdits) {
                                 UndoMapEdit();
                                 sortMetaEdits--;
                             }
                         }
+
                     }
 
                     if (nk_tree_push(NK_Context, NK_TREE_TAB, "Colour Maps", NK_MINIMIZED))
