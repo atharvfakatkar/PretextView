@@ -23,7 +23,7 @@ SOFTWARE.
 #define String_(x) #x
 #define String(x) String_(x)
 
-#define PretextView_Version "PretextView Version " String(PV) 
+#define PretextView_Version "PretextView Version " String(PV)
 
 #include "Header.h"
 
@@ -114,7 +114,7 @@ SOFTWARE.
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_IMPLEMENTATION
 #define NK_INCLUDE_STANDARD_VARARGS
-//#define NK_KEYSTATE_BASED_INPUT
+// #define NK_KEYSTATE_BASED_INPUT
 #ifndef DEBUG
 #define NK_ASSERT(x)
 #endif
@@ -123,10 +123,8 @@ SOFTWARE.
 
 #include "Resources.cpp"
 
-global_variable
-const
-GLchar *
-VertexSource_Texture = R"glsl(
+global_variable const GLchar *
+    VertexSource_Texture = R"glsl(
     #version 330
     in vec2 position;
     in vec3 texcoord;
@@ -139,10 +137,8 @@ VertexSource_Texture = R"glsl(
     }
 )glsl";
 
-global_variable
-const
-GLchar *
-FragmentSource_Texture = R"glsl(
+global_variable const GLchar *
+    FragmentSource_Texture = R"glsl(
     #version 330
     in vec3 Texcoord;
     out vec4 outColor;
@@ -259,10 +255,8 @@ FragmentSource_Texture = R"glsl(
     }
 )glsl";
 
-global_variable
-const
-GLchar *
-VertexSource_Flat = R"glsl(
+global_variable const GLchar *
+    VertexSource_Flat = R"glsl(
     #version 330
     in vec2 position;
     uniform mat4 matrix;
@@ -272,10 +266,8 @@ VertexSource_Flat = R"glsl(
     }
 )glsl";
 
-global_variable
-const
-GLchar *
-FragmentSource_Flat = R"glsl(
+global_variable const GLchar *
+    FragmentSource_Flat = R"glsl(
     #version 330
     out vec4 outColor;
     uniform vec4 color;
@@ -285,10 +277,8 @@ FragmentSource_Flat = R"glsl(
     }
 )glsl";
 
-global_variable
-const
-GLchar *
-VertexSource_EditablePlot = R"glsl(
+global_variable const GLchar *
+    VertexSource_EditablePlot = R"glsl(
     #version 330
     in float position;
     uniform usamplerBuffer pixrearrangelookup;
@@ -309,10 +299,8 @@ VertexSource_EditablePlot = R"glsl(
     }
 )glsl";
 
-global_variable
-const
-GLchar *
-FragmentSource_EditablePlot = R"glsl(
+global_variable const GLchar *
+    FragmentSource_EditablePlot = R"glsl(
     #version 330
     out vec4 outColor;
     uniform vec4 color;
@@ -323,10 +311,8 @@ FragmentSource_EditablePlot = R"glsl(
 )glsl";
 
 // https://blog.tammearu.eu/posts/gllines/
-global_variable
-const
-GLchar *
-GeometrySource_EditablePlot = R"glsl(
+global_variable const GLchar *
+    GeometrySource_EditablePlot = R"glsl(
     #version 330
     layout (lines) in;
     layout (triangle_strip, max_vertices = 4) out;
@@ -358,10 +344,8 @@ GeometrySource_EditablePlot = R"glsl(
 #define UI_SHADER_LOC_TEXCOORD 1
 #define UI_SHADER_LOC_COLOR 2
 
-global_variable
-const
-GLchar *
-VertexSource_UI = R"glsl(
+global_variable const GLchar *
+    VertexSource_UI = R"glsl(
     #version 330
     layout (location = 0) in vec2 position;
     layout (location = 1) in vec2 texcoord;
@@ -377,10 +361,8 @@ VertexSource_UI = R"glsl(
     }
 )glsl";
 
-global_variable
-const
-GLchar *
-FragmentSource_UI = R"glsl(
+global_variable const GLchar *
+    FragmentSource_UI = R"glsl(
     #version 330
     in vec2 Texcoord;
     in vec4 Color;
@@ -393,98 +375,92 @@ FragmentSource_UI = R"glsl(
 )glsl";
 
 struct
-tex_vertex
+    tex_vertex
 {
     f32 x, y, pad;
     f32 s, t, u;
 };
 
 struct
-vertex
+    vertex
 {
     f32 x, y;
 };
 
 global_variable
-memory_arena
-Working_Set;
+    memory_arena
+        Working_Set;
+
+global_variable thread_pool *
+    Thread_Pool;
 
 global_variable
-thread_pool *
-Thread_Pool;
+    u32
+        Redisplay = 0;
 
 global_variable
-u32
-Redisplay = 0;
+    u08
+        hztwaypoints = 0;
 
 global_variable
-u08
-hztwaypoints = 0;
+    s32
+        Window_Width,
+    Window_Height, FrameBuffer_Width, FrameBuffer_Height;
 
-global_variable
-s32
-Window_Width, Window_Height, FrameBuffer_Width, FrameBuffer_Height;
+global_variable struct nk_vec2
+    Screen_Scale;
 
-global_variable
-struct nk_vec2
-Screen_Scale;
-
-enum
-theme
+enum theme
 {
     THEME_BLACK,
     THEME_WHITE,
     THEME_RED,
     THEME_BLUE,
     THEME_DARK,
-    
+
     THEME_COUNT
 };
 
 global_variable
-theme
-Current_Theme;
+    theme
+        Current_Theme;
 
-global_variable
-u08 *
-Theme_Name[THEME_COUNT];
+global_variable u08 *
+    Theme_Name[THEME_COUNT];
 
-global_function
-void
+global_function void
 SetTheme(struct nk_context *ctx, enum theme theme);
 
 global_variable
-f32
-bgcolor [][4] =
-{
-    {0.2f, 0.6f, 0.4f, 1.0f},       // original
-    {0.922f, 0.635f, 0.369f, 1.0f},  // jasper (orange)
-    {0.62f, 0.482f, 0.71f, 1.0f},   // heather (lavender)
-    {0.29f, 0.545f, 0.659f, 1.0f},  // Carolina (blue)
-    {1.0f, 1.0f, 1.0f, 1.0f},       // white
-    {0.765f, 0.765f, 0.765f, 1.0f},  //Grey
-    {0.0f, 0.0f, 0.0f, 1.0f}        // Black
+    f32
+        bgcolor[][4] =
+            {
+                {0.2f, 0.6f, 0.4f, 1.0f},       // original
+                {0.922f, 0.635f, 0.369f, 1.0f}, // jasper (orange)
+                {0.62f, 0.482f, 0.71f, 1.0f},   // heather (lavender)
+                {0.29f, 0.545f, 0.659f, 1.0f},  // Carolina (blue)
+                {1.0f, 1.0f, 1.0f, 1.0f},       // white
+                {0.765f, 0.765f, 0.765f, 1.0f}, // Grey
+                {0.0f, 0.0f, 0.0f, 1.0f}        // Black
 };
 
-global_variable
-char *
-bg_color[] =
-{
-    "Classic",
-    "Jasper",
-    "Heather",
-    "Carolina",
-    "White",
-    "Grey",
-    "Black"
-};
+global_variable char *
+    bg_color[] =
+        {
+            "Classic",
+            "Jasper",
+            "Heather",
+            "Carolina",
+            "White",
+            "Grey",
+            "Black"};
 
 global_variable
-u08
-active_bgcolor = 0;
+    u08
+        active_bgcolor = 0;
 
 struct
-metaoutline
+    metaoutline
 {
     u08 on;
     u08 color;
@@ -492,89 +468,77 @@ metaoutline
 
 struct metaoutline global_meta_outline = {1, 0};
 
-global_variable
-metaoutline *
-meta_outline = &global_meta_outline;
+global_variable metaoutline *
+    meta_outline = &global_meta_outline;
 
 global_variable
-u08
-default_metadata_colorProfile = 0;
+    u08
+        default_metadata_colorProfile = 0;
 
 global_variable
-u08
-meta_data_curcolorProfile = default_metadata_colorProfile;
+    u08
+        meta_data_curcolorProfile = default_metadata_colorProfile;
 
 global_variable
-f32
-meta_dataColors[][3] =
-{
-    {1.666f, 2.666f, 3.666f},  //original
-    {2.666f, 1.666f, 3.666f},  
-    {3.666f, 2.666f, 1.666f},  
-    {5.666f, 3.666f, 2.666f}
+    f32
+        meta_dataColors[][3] =
+            {
+                {1.666f, 2.666f, 3.666f}, // original
+                {2.666f, 1.666f, 3.666f},
+                {3.666f, 2.666f, 1.666f},
+                {5.666f, 3.666f, 2.666f}};
+
+global_variable char *
+    metaColors[] =
+        {
+            "Profile 1",
+            "Profile 2",
+            "Profile 3",
+            "Profile 4"};
+
+global_variable char *
+    outlineColors[] =
+        {
+            "No-Outline",
+            "Black",
+            "White"};
+
+global_variable
+    u08
+        activeGraphColour = 0;
+
+global_variable
+    nk_colorf
+        graphColors[] =
+            {
+                {0.1f, 0.8f, 0.7f, 1.0f},       // Default
+                {1.0f, 0.341f, 0.2f, 1.0f},     // Vermillion
+                {0.137f, 0.451f, 0.882f, 1.0f}, // essence (vibrant blue)
+                {0.706f, 0.0f, 1.0f, 1.0f}      // Drystorm (purple)
 };
 
-global_variable
-char *
-metaColors[] =
-{
-    "Profile 1",
-    "Profile 2",
-    "Profile 3",
-    "Profile 4"
-};
+global_variable char *
+    colour_graph[] =
+        {
+            "Default",
+            "Vermillion",
+            "Blue",
+            "Purple"};
 
 global_variable
-char *
-outlineColors[] =
-{
-    "No-Outline",
-    "Black",
-    "White"
-};
+    nk_colorf
+        DefaultGraphColour = graphColors[activeGraphColour];
 
-global_variable
-u08
-activeGraphColour = 0;
+global_variable nk_context *
+    NK_Context;
 
-global_variable
-nk_colorf
-graphColors[] = 
-{
-    {0.1f, 0.8f, 0.7f, 1.0f},       //Default
-    {1.0f, 0.341f, 0.2f, 1.0f},       //Vermillion
-    {0.137f, 0.451f, 0.882f, 1.0f},        //essence (vibrant blue)
-    {0.706f, 0.0f, 1.0f, 1.0f}            //Drystorm (purple)
-};
-
-global_variable
-char *
-colour_graph[] = 
-{
-    "Default",
-    "Vermillion",
-    "Blue",
-    "Purple"
-};
-
-
-global_variable
-nk_colorf
-DefaultGraphColour = graphColors[activeGraphColour];
-
-global_variable
-nk_context *
-NK_Context;
-
-global_function
-void
+global_function void
 ChangeSize(s32 width, s32 height)
 {
     glViewport(0, 0, width, height);
 }
 
-global_function
-void
+global_function void
 UpdateScreenScale()
 {
     Screen_Scale.x = (f32)FrameBuffer_Width / (f32)Window_Width;
@@ -582,8 +546,7 @@ UpdateScreenScale()
     SetTheme(NK_Context, Current_Theme);
 }
 
-global_function
-void
+global_function void
 GLFWChangeFrameBufferSize(GLFWwindow *win, s32 width, s32 height)
 {
     (void)win;
@@ -594,8 +557,7 @@ GLFWChangeFrameBufferSize(GLFWwindow *win, s32 width, s32 height)
     UpdateScreenScale();
 }
 
-global_function
-void
+global_function void
 GLFWChangeWindowSize(GLFWwindow *win, s32 width, s32 height)
 {
     (void)win;
@@ -605,7 +567,7 @@ GLFWChangeWindowSize(GLFWwindow *win, s32 width, s32 height)
 }
 
 struct
-contact_matrix
+    contact_matrix
 {
     GLuint textures;
     GLuint pixelStartLookupBuffer;
@@ -620,7 +582,7 @@ contact_matrix
 };
 
 struct
-flat_shader
+    flat_shader
 {
     GLuint shaderProgram;
     GLint matLocation;
@@ -629,14 +591,14 @@ flat_shader
 };
 
 struct
-ui_shader
+    ui_shader
 {
     GLuint shaderProgram;
     GLint matLocation;
 };
 
 struct
-editable_plot_shader
+    editable_plot_shader
 {
     GLuint shaderProgram;
     GLuint yValuesBuffer;
@@ -649,7 +611,7 @@ editable_plot_shader
 };
 
 struct
-quad_data
+    quad_data
 {
     GLuint *vaos;
     GLuint *vbos;
@@ -658,7 +620,7 @@ quad_data
 };
 
 struct
-color_maps
+    color_maps
 {
     GLuint *maps;
     u32 currMap;
@@ -668,8 +630,22 @@ color_maps
     struct nk_image *mapPreviews;
 };
 
-struct 
-nk_glfw_vertex
+struct
+    CustomColorMapOrder
+{
+    u32 nMaps;
+    u32 order[Number_of_Color_Maps];
+};
+
+global_variable
+    CustomColorMapOrder
+        userColourMapOrder;
+
+global_variable int
+    useCustomOrder = 0;
+
+struct
+    nk_glfw_vertex
 {
     f32 position[2];
     f32 uv[2];
@@ -677,7 +653,7 @@ nk_glfw_vertex
 };
 
 struct
-device
+    device
 {
     u08 *lastContextMemory;
     struct nk_buffer cmds;
@@ -694,147 +670,127 @@ device
     GLuint font_tex;
 };
 
-global_variable
-device *
-NK_Device;
+global_variable device *
+    NK_Device;
 
-global_variable
-nk_font_atlas *
-NK_Atlas;
+global_variable nk_font_atlas *
+    NK_Atlas;
 
-global_variable
-nk_font *
-NK_Font;
+global_variable nk_font *
+    NK_Font;
 
-global_variable
-nk_font *
-NK_Font_Browser;
+global_variable nk_font *
+    NK_Font_Browser;
 
-global_variable
-color_maps *
-Color_Maps;
+global_variable color_maps *
+    Color_Maps;
 
 #ifdef Internal
-global_variable
-quad_data *
-Texture_Tile_Grid;
+global_variable quad_data *
+    Texture_Tile_Grid;
 
-global_variable
-quad_data *
-QuadTree_Data;
+global_variable quad_data *
+    QuadTree_Data;
 #endif
 
-global_variable
-quad_data *
-Grid_Data;
+global_variable quad_data *
+    Grid_Data;
+
+global_variable quad_data *
+    Contig_ColourBar_Data;
+
+global_variable quad_data *
+    Scaff_Bar_Data;
+
+global_variable quad_data *
+    Edit_Mode_Data;
+
+global_variable quad_data *
+    Label_Box_Data;
+
+global_variable quad_data *
+    Scale_Bar_Data;
+
+global_variable quad_data *
+    Tool_Tip_Data;
+
+global_variable quad_data *
+    Waypoint_Data;
+
+global_variable ui_shader *
+    UI_Shader;
+
+global_variable flat_shader *
+    Flat_Shader;
+
+global_variable contact_matrix *
+    Contact_Matrix;
 
 global_variable
-quad_data *
-Contig_ColourBar_Data;
+    threadSig
+        Texture_Ptr = 0;
+
+global_variable volatile texture_buffer *
+    Current_Loaded_Texture = 0;
 
 global_variable
-quad_data *
-Scaff_Bar_Data;
+    u32
+        Texture_Resolution;
 
 global_variable
-quad_data *
-Edit_Mode_Data;
+    u32
+        Number_of_MipMaps;
 
 global_variable
-quad_data *
-Label_Box_Data;
+    u32
+        Number_of_Textures_1D;
 
 global_variable
-quad_data *
-Scale_Bar_Data;
+    u32
+        Number_of_Pixels_1D;
 
 global_variable
-quad_data *
-Tool_Tip_Data;
+    u32
+        Bytes_Per_Texture;
 
-global_variable
-quad_data *
-Waypoint_Data;
-
-global_variable
-ui_shader *
-UI_Shader;
-
-global_variable
-flat_shader *
-Flat_Shader;
-
-global_variable
-contact_matrix *
-Contact_Matrix;
-
-global_variable
-threadSig
-Texture_Ptr = 0;
-
-global_variable
-volatile texture_buffer *
-Current_Loaded_Texture = 0;
-
-global_variable
-u32
-Texture_Resolution;
-
-global_variable
-u32
-Number_of_MipMaps;
-
-global_variable
-u32
-Number_of_Textures_1D;
-
-global_variable
-u32
-Number_of_Pixels_1D;
-
-global_variable
-u32
-Bytes_Per_Texture;
-
-global_variable
-texture_buffer_queue *
-Texture_Buffer_Queue;
+global_variable texture_buffer_queue *
+    Texture_Buffer_Queue;
 
 struct
-pointi
+    pointi
 {
     s32 x;
     s32 y;
 };
 
 struct
-pointui
+    pointui
 {
     u32 x, y;
 };
 
 struct
-pointd
+    pointd
 {
     f64 x;
     f64 y;
 };
 
 struct
-point2f
+    point2f
 {
     f32 x;
     f32 y;
 };
 
 struct
-quad
+    quad
 {
     point2f corner[2];
 };
 
 struct
-point3f
+    point3f
 {
     f32 x;
     f32 y;
@@ -842,22 +798,22 @@ point3f
 };
 
 global_variable
-pointd
-Mouse_Move;
+    pointd
+        Mouse_Move;
 
 struct
-tool_tip
+    tool_tip
 {
     pointui pixels;
     point2f worldCoords;
 };
 
 global_variable
-tool_tip
-Tool_Tip_Move;
+    tool_tip
+        Tool_Tip_Move;
 
 struct
-edit_pixels
+    edit_pixels
 {
     pointui pixels;
     point2f worldCoords;
@@ -869,19 +825,18 @@ edit_pixels
 };
 
 global_variable
-edit_pixels
-Edit_Pixels;
+    edit_pixels
+        Edit_Pixels;
 
 global_variable
-point3f
-Camera_Position;
+    point3f
+        Camera_Position;
 
-global_variable
-FONScontext *
-FontStash_Context;
+global_variable FONScontext *
+    FontStash_Context;
 
 struct
-ui_colour_element_bg
+    ui_colour_element_bg
 {
     u32 on;
     nk_colorf fg;
@@ -900,58 +855,51 @@ ui_colour_element_bg
 #define Red_Full {1.0f, 0.0f, 0.0f, 1.0f}
 #define Blue_Full {0.0f, 0.0f, 1.0f, 1.0f}
 
-global_variable
-ui_colour_element_bg *
-Contig_Name_Labels;
+global_variable ui_colour_element_bg *
+    Contig_Name_Labels;
+
+global_variable ui_colour_element_bg *
+    Scale_Bars;
+
+global_variable ui_colour_element_bg *
+    Tool_Tip;
 
 global_variable
-ui_colour_element_bg *
-Scale_Bars;
+    u32
+        Waypoints_Always_Visible = 1;
 
 global_variable
-ui_colour_element_bg *
-Tool_Tip;
+    u08
+        Scaffs_Always_Visible = 1;
 
 global_variable
-u32
-Waypoints_Always_Visible = 1;
-
-global_variable
-u08
-Scaffs_Always_Visible = 1;
-
-global_variable
-u08
-MetaData_Always_Visible = 1;
+    u08
+        MetaData_Always_Visible = 1;
 
 struct
-ui_colour_element
+    ui_colour_element
 {
     u32 on;
     nk_colorf bg;
     f32 size;
 };
 
-global_variable
-ui_colour_element *
-Grid;
+global_variable ui_colour_element *
+    Grid;
 
-global_variable
-ui_colour_element *
-Contig_Ids;
+global_variable ui_colour_element *
+    Contig_Ids;
 
 #ifdef Internal
-global_variable
-ui_colour_element *
-Tiles;
+global_variable ui_colour_element *
+    Tiles;
 
-global_variable
-ui_colour_element *
-QuadTrees;
+global_variable ui_colour_element *
+    QuadTrees;
 #endif
 
 struct
-edit_mode_colours
+    edit_mode_colours
 {
     nk_colorf preSelect;
     nk_colorf select;
@@ -960,12 +908,11 @@ edit_mode_colours
     nk_colorf bg;
 };
 
-global_variable
-edit_mode_colours *
-Edit_Mode_Colours;
+global_variable edit_mode_colours *
+    Edit_Mode_Colours;
 
 struct
-waypoint_mode_data
+    waypoint_mode_data
 {
     nk_colorf base;
     nk_colorf selected;
@@ -974,36 +921,31 @@ waypoint_mode_data
     f32 size;
 };
 
-global_variable
-waypoint_mode_data *
-Waypoint_Mode_Data;
+global_variable waypoint_mode_data *
+    Waypoint_Mode_Data;
 
 struct
-meta_mode_data
+    meta_mode_data
 {
     nk_colorf text;
     nk_colorf bg;
     f32 size;
 };
 
-global_variable
-meta_mode_data *
-Scaff_Mode_Data;
+global_variable meta_mode_data *
+    Scaff_Mode_Data;
+
+global_variable meta_mode_data *
+    MetaData_Mode_Data;
+
+global_variable meta_mode_data *
+    Extension_Mode_Data;
 
 global_variable
-meta_mode_data *
-MetaData_Mode_Data;
+    u32
+        UI_On = 0;
 
-global_variable
-meta_mode_data *
-Extension_Mode_Data;
-
-global_variable
-u32
-UI_On = 0;
-
-enum
-global_mode
+enum global_mode
 {
     mode_normal = 0,
     mode_edit = 1,
@@ -1014,8 +956,8 @@ global_mode
 };
 
 global_variable
-global_mode
-Global_Mode = mode_normal;
+    global_mode
+        Global_Mode = mode_normal;
 
 #define Edit_Mode (Global_Mode == mode_edit)
 #define Normal_Mode (Global_Mode == mode_normal)
@@ -1025,15 +967,14 @@ Global_Mode = mode_normal;
 #define Extension_Mode (Global_Mode == mode_extension)
 
 global_variable
-s32
-Font_Normal = FONS_INVALID;
+    s32
+        Font_Normal = FONS_INVALID;
 
 global_variable
-s32
-Font_Bold = FONS_INVALID;
+    s32
+        Font_Bold = FONS_INVALID;
 
-global_function
-void
+global_function void
 ClampCamera()
 {
     Camera_Position.z = Min(Max(Camera_Position.z, 1.0f), ((f32)(Pow2((Number_of_MipMaps + 1)))));
@@ -1041,8 +982,7 @@ ClampCamera()
     Camera_Position.y = Min(Max(Camera_Position.y, -0.5f), 0.5f);
 }
 
-global_function
-void
+global_function void
 ZoomCamera(f32 dir)
 {
     f32 scrollFactor = 1.1f;
@@ -1052,35 +992,34 @@ ZoomCamera(f32 dir)
 }
 
 global_variable
-u32
-Loading = 0;
+    u32
+        Loading = 0;
 
 global_function
-s32
-RearrangeMap(u32 pixelFrom, u32 pixelTo, s32 delta, u08 snap = 0);
+    s32
+    RearrangeMap(u32 pixelFrom, u32 pixelTo, s32 delta, u08 snap = 0);
 
-global_function
-void
+global_function void
 InvertMap(u32 pixelFrom, u32 pixelTo);
 
 global_variable
-u32
-Global_Edit_Invert_Flag = 0;
+    u32
+        Global_Edit_Invert_Flag = 0;
 
 global_variable
-u08
-Scaff_Painting_Flag = 0;
+    u08
+        Scaff_Painting_Flag = 0;
 
 global_variable
-u08
-Scaff_FF_Flag = 0;
+    u08
+        Scaff_FF_Flag = 0;
 
 global_variable
-u32
-Scaff_Painting_Id = 0;
+    u32
+        Scaff_Painting_Id = 0;
 
 struct
-original_contig
+    original_contig
 {
     u32 name[16];
     u32 *contigMapPixels;
@@ -1088,16 +1027,15 @@ original_contig
     u32 pad;
 };
 
-global_variable
-original_contig *
-Original_Contigs;
+global_variable original_contig *
+    Original_Contigs;
 
 global_variable
-u32
-Number_of_Original_Contigs;
+    u32
+        Number_of_Original_Contigs;
 
 struct
-contig
+    contig
 {
     u64 *metaDataFlags;
     u32 originalContigId;
@@ -1108,7 +1046,7 @@ contig
 };
 
 struct
-contigs
+    contigs
 {
     u08 *contigInvertFlags;
     contig *contigs;
@@ -1116,43 +1054,41 @@ contigs
     u32 pad;
 };
 
-global_variable
-contigs *
-Contigs;
+global_variable contigs *
+    Contigs;
 
 global_function
-u08
-IsContigInverted(u32 index)
+    u08
+    IsContigInverted(u32 index)
 {
-    return(Contigs->contigInvertFlags[index >> 3] & (1 << (index & 7)));
+    return (Contigs->contigInvertFlags[index >> 3] & (1 << (index & 7)));
 }
 
 #define Max_Number_of_Contigs 4096
 
 struct
-meta_data
+    meta_data
 {
     u32 tags[64][16];
 };
 
-global_variable
-meta_data *
-Meta_Data;
+global_variable meta_data *
+    Meta_Data;
 
 global_variable
-u32
-MetaData_Active_Tag = 0;
+    u32
+        MetaData_Active_Tag = 0;
 
 global_variable
-u08
-MetaData_Edit_State = 0;
+    u08
+        MetaData_Edit_State = 0;
 
 global_variable
-u16
-sortMetaEdits;
+    u16
+        sortMetaEdits;
 
 struct
-map_state
+    map_state
 {
     u32 *contigIds;
     u32 *originalContigIds;
@@ -1161,12 +1097,10 @@ map_state
     u64 *metaDataFlags;
 };
 
-global_variable
-map_state *
-Map_State;
+global_variable map_state *
+    Map_State;
 
-global_function
-void
+global_function void
 UpdateContigsFromMapState()
 {
     u32 lastScaffID = Map_State->scaffIds[0];
@@ -1178,12 +1112,13 @@ UpdateContigsFromMapState()
     u32 startCoord = lastCoord;
     u08 inverted = Map_State->contigRelCoords[1] < lastCoord;
     Map_State->contigIds[0] = 0;
-    
+
     u32 pixelIdx = 0;
-    ForLoop(Number_of_Original_Contigs) (Original_Contigs + index)->nContigs = 0;
+    ForLoop(Number_of_Original_Contigs)(Original_Contigs + index)->nContigs = 0;
     ForLoop(Number_of_Pixels_1D - 1)
     {
-        if (contigPtr == Max_Number_of_Contigs) break;
+        if (contigPtr == Max_Number_of_Contigs)
+            break;
 
         ++length;
 
@@ -1207,16 +1142,19 @@ UpdateContigsFromMapState()
 
             if (IsContigInverted(contigPtr - 1))
             {
-                if (!inverted) Contigs->contigInvertFlags[(contigPtr - 1) >> 3] &= ~(1 << ((contigPtr - 1) & 7));
+                if (!inverted)
+                    Contigs->contigInvertFlags[(contigPtr - 1) >> 3] &= ~(1 << ((contigPtr - 1) & 7));
             }
             else
             {
-                if (inverted) Contigs->contigInvertFlags[(contigPtr - 1) >> 3] |= (1 << ((contigPtr - 1) & 7));
+                if (inverted)
+                    Contigs->contigInvertFlags[(contigPtr - 1) >> 3] |= (1 << ((contigPtr - 1) & 7));
             }
 
             startCoord = coord;
             length = 0;
-            if (pixelIdx < (Number_of_Pixels_1D - 1)) inverted = Map_State->contigRelCoords[pixelIdx + 1] < coord;
+            if (pixelIdx < (Number_of_Pixels_1D - 1))
+                inverted = Map_State->contigRelCoords[pixelIdx + 1] < coord;
         }
 
         Map_State->contigIds[pixelIdx] = (u32)contigPtr;
@@ -1234,29 +1172,29 @@ UpdateContigsFromMapState()
         cont->length = length;
         cont->startCoord = startCoord;
         cont->metaDataFlags = Map_State->metaDataFlags + pixelIdx - 1;
-        
+
         u32 thisScaffID = Map_State->scaffIds[pixelIdx];
         cont->scaffId = thisScaffID ? ((thisScaffID == lastScaffID) ? (scaffId) : (++scaffId)) : 0;
-        
+
         if (IsContigInverted(contigPtr - 1))
         {
-            if (!inverted) Contigs->contigInvertFlags[(contigPtr - 1) >> 3] &= ~(1 << ((contigPtr - 1) & 7));
+            if (!inverted)
+                Contigs->contigInvertFlags[(contigPtr - 1) >> 3] &= ~(1 << ((contigPtr - 1) & 7));
         }
         else
         {
-            if (inverted) Contigs->contigInvertFlags[(contigPtr - 1) >> 3] |= (1 << ((contigPtr - 1) & 7));
+            if (inverted)
+                Contigs->contigInvertFlags[(contigPtr - 1) >> 3] |= (1 << ((contigPtr - 1) & 7));
         }
     }
 
     Contigs->numberOfContigs = contigPtr;
 }
 
-global_function
-void
+global_function void
 AddMapEdit(s32 delta, pointui finalPixels, u32 invert);
 
-global_function
-void
+global_function void
 RebuildContig(u32 pixel)
 {
     for (;;)
@@ -1265,10 +1203,12 @@ RebuildContig(u32 pixel)
         u32 origContigId = Map_State->originalContigIds[pixel];
 
         u32 top = (u32)pixel;
-        while (top && (Map_State->contigIds[top - 1] == contigId)) --top;
+        while (top && (Map_State->contigIds[top - 1] == contigId))
+            --top;
 
         u32 bottom = pixel;
-        while ((bottom < (Number_of_Pixels_1D - 1)) && (Map_State->contigIds[bottom + 1] == contigId)) ++bottom;
+        while ((bottom < (Number_of_Pixels_1D - 1)) && (Map_State->contigIds[bottom + 1] == contigId))
+            ++bottom;
 
         if (IsContigInverted(contigId))
         {
@@ -1308,19 +1248,24 @@ RebuildContig(u32 pixel)
 
                 if (invert)
                 {
-                    while ((otherPixel < (Number_of_Pixels_1D - 1)) && (Map_State->contigIds[otherPixel + 1] == Map_State->contigIds[otherPixel2])) ++otherPixel;
+                    while ((otherPixel < (Number_of_Pixels_1D - 1)) && (Map_State->contigIds[otherPixel + 1] == Map_State->contigIds[otherPixel2]))
+                        ++otherPixel;
                 }
                 else
                 {
-                    while (otherPixel2 && (Map_State->contigIds[otherPixel2 - 1] == Map_State->contigIds[otherPixel])) --otherPixel2;
+                    while (otherPixel2 && (Map_State->contigIds[otherPixel2 - 1] == Map_State->contigIds[otherPixel]))
+                        --otherPixel2;
                 }
 
                 s32 delta = (s32)top - (s32)otherPixel;
-                if (delta > 0) --delta;
-                else delta = (s32)top - (s32)otherPixel2;
+                if (delta > 0)
+                    --delta;
+                else
+                    delta = (s32)top - (s32)otherPixel2;
                 pointui finalPixels = {(u32)((s32)otherPixel2 + delta), (u32)((s32)otherPixel + delta)};
                 RearrangeMap(otherPixel2, otherPixel, delta);
-                if (invert) InvertMap(finalPixels.x, finalPixels.y);
+                if (invert)
+                    InvertMap(finalPixels.x, finalPixels.y);
                 AddMapEdit(delta, finalPixels, invert);
                 sortMetaEdits = 0;
             }
@@ -1343,31 +1288,37 @@ RebuildContig(u32 pixel)
 
                 if (!invert)
                 {
-                    while ((otherPixel < (Number_of_Pixels_1D - 1)) && (Map_State->contigIds[otherPixel + 1] == Map_State->contigIds[otherPixel2])) ++otherPixel;
+                    while ((otherPixel < (Number_of_Pixels_1D - 1)) && (Map_State->contigIds[otherPixel + 1] == Map_State->contigIds[otherPixel2]))
+                        ++otherPixel;
                 }
                 else
                 {
-                    while (otherPixel2 && (Map_State->contigIds[otherPixel2 - 1] == Map_State->contigIds[otherPixel])) --otherPixel2;
+                    while (otherPixel2 && (Map_State->contigIds[otherPixel2 - 1] == Map_State->contigIds[otherPixel]))
+                        --otherPixel2;
                 }
 
                 s32 delta = (s32)bottom - (s32)otherPixel2;
-                if (delta < 0) ++delta;
-                else delta = (s32)bottom - (s32)otherPixel;
+                if (delta < 0)
+                    ++delta;
+                else
+                    delta = (s32)bottom - (s32)otherPixel;
                 pointui finalPixels = {(u32)((s32)otherPixel2 + delta), (u32)((s32)otherPixel + delta)};
                 RearrangeMap(otherPixel2, otherPixel, delta);
-                if (invert) InvertMap(finalPixels.x, finalPixels.y);
+                if (invert)
+                    InvertMap(finalPixels.x, finalPixels.y);
                 AddMapEdit(delta, finalPixels, invert);
                 sortMetaEdits = 0;
             }
 
             continue;
         }
-        else break;
+        else
+            break;
     }
 }
 
 struct
-map_edit
+    map_edit
 {
     u32 finalPix1;
     u32 finalPix2;
@@ -1375,10 +1326,10 @@ map_edit
 };
 
 struct
-waypoint;
+    waypoint;
 
 struct
-waypoint_quadtree_node
+    waypoint_quadtree_node
 {
     waypoint *wayp;
     waypoint_quadtree_node *next;
@@ -1386,7 +1337,7 @@ waypoint_quadtree_node
 };
 
 struct
-waypoint
+    waypoint
 {
     point2f coords;
     f32 z;
@@ -1401,7 +1352,7 @@ waypoint
 #define Waypoints_Stack_Size 128
 
 struct
-map_editor
+    map_editor
 {
     map_edit *edits;
     u32 nEdits;
@@ -1410,14 +1361,13 @@ map_editor
     u32 pad;
 };
 
-global_variable
-map_editor *
-Map_Editor;
+global_variable map_editor *
+    Map_Editor;
 
 #define Waypoints_Quadtree_Levels 5
 
 struct
-waypoint_quadtree_level
+    waypoint_quadtree_level
 {
 #ifdef Internal
     u32 show;
@@ -1431,7 +1381,7 @@ waypoint_quadtree_level
 };
 
 struct
-waypoint_editor
+    waypoint_editor
 {
     waypoint freeWaypoints;
     waypoint activeWaypoints;
@@ -1441,17 +1391,14 @@ waypoint_editor
     u32 pad;
 };
 
-global_variable
-waypoint_editor *
-Waypoint_Editor;
+global_variable waypoint_editor *
+    Waypoint_Editor;
 
 #define Waypoint_Select_Distance 8.0f
-global_variable
-waypoint *
-Selected_Waypoint = 0;
+global_variable waypoint *
+    Selected_Waypoint = 0;
 
-global_function
-waypoint_quadtree_level *
+global_function waypoint_quadtree_level *
 PushQuadTree(memory_arena *arena, u32 level = 0, point2f lowerBound = {-0.5f, -0.5f}, f32 size = 1.0f)
 {
     waypoint_quadtree_level *quadtreeLevel = 0;
@@ -1474,27 +1421,23 @@ PushQuadTree(memory_arena *arena, u32 level = 0, point2f lowerBound = {-0.5f, -0
         quadtreeLevel->children[3] = PushQuadTree(arena, level + 1, {lowerBound.x + halfSize, lowerBound.y + halfSize}, halfSize);
     }
 
-    return(quadtreeLevel);
+    return (quadtreeLevel);
 }
 
-global_function
-void
+global_function void
 #ifdef Internal
 GetWaypointsWithinRectange(point2f lowerBound, point2f size, waypoint ***bufferPtr, u32 reset = 1);
 #else
 GetWaypointsWithinRectange(point2f lowerBound, point2f size, waypoint ***bufferPtr);
 #endif
 
-global_function
-void
+global_function void
 UpdateWayPoint(waypoint *wayp, point2f coords);
 
-global_function
-void
+global_function void
 MoveWayPoints(map_edit *edit, u32 undo = 0);
 
-global_function
-void
+global_function void
 AddMapEdit(s32 delta, pointui finalPixels, u32 invert)
 {
     ++Map_Editor->nEdits;
@@ -1515,15 +1458,13 @@ AddMapEdit(s32 delta, pointui finalPixels, u32 invert)
     edit->finalPix2 = pix2;
 }
 
-global_function
-void
+global_function void
 UpdateScaffolds()
 {
     ForLoop(Number_of_Pixels_1D) Map_State->scaffIds[index] = (Contigs->contigs + Map_State->contigIds[index])->scaffId;
 }
 
-global_function
-void
+global_function void
 UndoMapEdit()
 {
     if (Map_Editor->nEdits && !Edit_Pixels.editing)
@@ -1552,8 +1493,7 @@ UndoMapEdit()
     }
 }
 
-global_function
-void
+global_function void
 RedoMapEdit()
 {
     if (Map_Editor->nUndone && !Edit_Pixels.editing)
@@ -1572,18 +1512,17 @@ RedoMapEdit()
         u32 end = Max(edit->finalPix1, edit->finalPix2);
 
         RearrangeMap((u32)((s32)start - edit->delta), (u32)((s32)end - edit->delta), edit->delta);
-        
+
         if (edit->finalPix1 > edit->finalPix2)
         {
             InvertMap((u32)edit->finalPix1, (u32)edit->finalPix2);
         }
-        
+
         UpdateScaffolds();
     }
 }
 
-global_function
-void
+global_function void
 MoveWayPoints(map_edit *edit, u32 undo)
 {
     pointui tmp;
@@ -1621,23 +1560,24 @@ MoveWayPoints(map_edit *edit, u32 undo)
     point2f editRangeModel = {((f32)editRange.x * ooNPixels) - 0.5f, ((f32)editRange.y * ooNPixels) - 0.5f};
     f32 dRange = editRangeModel.y - editRangeModel.x;
 
-    waypoint **searchBuffer = PushArray(Working_Set, waypoint*, Waypoints_Stack_Size);
+    waypoint **searchBuffer = PushArray(Working_Set, waypoint *, Waypoints_Stack_Size);
     waypoint **bufferEnd = searchBuffer;
 
     GetWaypointsWithinRectange({editRangeModel.x, -0.5f}, {dRange, 0.999f}, &bufferEnd);
     GetWaypointsWithinRectange({-0.5f, editRangeModel.x}, {0.999f, dRange}, &bufferEnd
 #ifdef Internal
-, 0
+                               ,
+                               0
 #endif
-            );
+    );
 
     u32 nWayp = (u32)((Max((size_t)bufferEnd, (size_t)searchBuffer) - Min((size_t)bufferEnd, (size_t)searchBuffer)) / sizeof(searchBuffer));
-    waypoint **seen = PushArray(Working_Set, waypoint*, nWayp);
+    waypoint **seen = PushArray(Working_Set, waypoint *, nWayp);
     u32 seenIdx = 0;
 
-    for (   waypoint **waypPtr = searchBuffer;
-            waypPtr != bufferEnd;
-            ++waypPtr )
+    for (waypoint **waypPtr = searchBuffer;
+         waypPtr != bufferEnd;
+         ++waypPtr)
     {
         waypoint *wayp = *waypPtr;
         u32 newWayP = 1;
@@ -1662,7 +1602,7 @@ MoveWayPoints(map_edit *edit, u32 undo)
             if (inRange)
             {
                 u32 upperTri = wayp->coords.x > wayp->coords.y;
-                
+
                 pointui pix = {(u32)((0.5f + wayp->coords.x) / ooNPixels), (u32)((0.5f + wayp->coords.y) / ooNPixels)};
 
                 if (pix.x >= startPixels.x && pix.x < startPixels.y)
@@ -1704,7 +1644,7 @@ MoveWayPoints(map_edit *edit, u32 undo)
                 UpdateWayPoint(wayp, newCoords);
             }
 
-            seen[seenIdx++] = wayp;    
+            seen[seenIdx++] = wayp;
         }
     }
 
@@ -1712,8 +1652,7 @@ MoveWayPoints(map_edit *edit, u32 undo)
     FreeLastPush(Working_Set); // seen
 }
 
-global_function
-void
+global_function void
 GetWaypointsWithinRectange(waypoint_quadtree_level *level, point2f lowerBound, point2f size, waypoint ***bufferPtr)
 {
     if (level->children[0])
@@ -1783,14 +1722,14 @@ GetWaypointsWithinRectange(waypoint_quadtree_level *level, point2f lowerBound, p
                 }
             }
         }
-   
+
 #ifdef Internal
         ForLoop(4)
         {
-            if (!toSearch[index]) level->children[index]->show = 1;
+            if (!toSearch[index])
+                level->children[index]->show = 1;
         }
 #endif
-    
     }
     else
     {
@@ -1803,55 +1742,57 @@ GetWaypointsWithinRectange(waypoint_quadtree_level *level, point2f lowerBound, p
 }
 
 #ifdef Internal
-global_function
-void
+global_function void
 TurnOffDrawingForQuadTreeLevel(waypoint_quadtree_level *level = 0)
 {
-    if (!level) level = Waypoint_Editor->quadtree;
+    if (!level)
+        level = Waypoint_Editor->quadtree;
     level->show = 0;
     ForLoop(4)
     {
-        if (level->children[index]) TurnOffDrawingForQuadTreeLevel(level->children[index]);
+        if (level->children[index])
+            TurnOffDrawingForQuadTreeLevel(level->children[index]);
     }
 }
 #endif
 
-global_function
-void
+global_function void
 GetWaypointsWithinSquare(point2f lowerBound, f32 size, waypoint ***bufferPtr
-#ifdef Internal        
-        , u32 reset = 1)
+#ifdef Internal
+                         ,
+                         u32 reset = 1)
 #else
-        )
+)
 #endif
 {
 #ifdef Internal
-    if (reset) TurnOffDrawingForQuadTreeLevel();
+    if (reset)
+        TurnOffDrawingForQuadTreeLevel();
 #endif
     GetWaypointsWithinRectange(Waypoint_Editor->quadtree, lowerBound, {size, size}, bufferPtr);
 }
 
-global_function
-void
+global_function void
 GetWaypointsWithinRectange(point2f lowerBound, point2f size, waypoint ***bufferPtr
-#ifdef Internal        
-        , u32 reset)
+#ifdef Internal
+                           ,
+                           u32 reset)
 #else
-        )
+)
 #endif
 {
 #ifdef Internal
-    if (reset) TurnOffDrawingForQuadTreeLevel();
+    if (reset)
+        TurnOffDrawingForQuadTreeLevel();
 #endif
     GetWaypointsWithinRectange(Waypoint_Editor->quadtree, lowerBound, size, bufferPtr);
 }
 
-global_function
-waypoint_quadtree_level *
+global_function waypoint_quadtree_level *
 GetWaypointQuadTreeLevel(point2f coords)
 {
     coords = {Max(Min(coords.x, 0.499f), -0.5f), Max(Min(coords.y, 0.499f), -0.5f)};
-    
+
     waypoint_quadtree_level *level = Waypoint_Editor->quadtree;
 
     while (level->children[0])
@@ -1866,11 +1807,11 @@ GetWaypointQuadTreeLevel(point2f coords)
             if (insertSize.x >= 0 && insertSize.x < size && insertSize.y >= 0 && insertSize.y < size)
             {
                 level = level->children[index];
-                
+
 #ifdef DEBUG
                 found = 1;
 #endif
-                
+
                 break;
             }
         }
@@ -1881,14 +1822,12 @@ GetWaypointQuadTreeLevel(point2f coords)
             Assert(found);
         }
 #endif
-
     }
 
-    return(level);
+    return (level);
 }
 
-global_function
-void
+global_function void
 AddWayPoint(point2f coords, u08 isvert = 1)
 {
     u32 nFree = Waypoints_Stack_Size - Waypoint_Editor->nWaypointsActive;
@@ -1897,10 +1836,12 @@ AddWayPoint(point2f coords, u08 isvert = 1)
     {
         waypoint *wayp = Waypoint_Editor->freeWaypoints.next;
         Waypoint_Editor->freeWaypoints.next = wayp->next;
-        if (Waypoint_Editor->freeWaypoints.next) Waypoint_Editor->freeWaypoints.next->prev = &Waypoint_Editor->freeWaypoints;
+        if (Waypoint_Editor->freeWaypoints.next)
+            Waypoint_Editor->freeWaypoints.next->prev = &Waypoint_Editor->freeWaypoints;
 
         wayp->next = Waypoint_Editor->activeWaypoints.next;
-        if (Waypoint_Editor->activeWaypoints.next) Waypoint_Editor->activeWaypoints.next->prev = wayp;
+        if (Waypoint_Editor->activeWaypoints.next)
+            Waypoint_Editor->activeWaypoints.next->prev = wayp;
         Waypoint_Editor->activeWaypoints.next = wayp;
         wayp->prev = &Waypoint_Editor->activeWaypoints;
         wayp->index = wayp->next ? wayp->next->index + 1 : 0;
@@ -1910,12 +1851,14 @@ AddWayPoint(point2f coords, u08 isvert = 1)
         ++Waypoint_Editor->nWaypointsActive;
 
         waypoint_quadtree_level *level = GetWaypointQuadTreeLevel(wayp->coords);
-        
+
         waypoint_quadtree_node *node = Waypoint_Editor->freeNodes.next;
-        if (node->next) node->next->prev = &Waypoint_Editor->freeNodes;
+        if (node->next)
+            node->next->prev = &Waypoint_Editor->freeNodes;
         Waypoint_Editor->freeNodes.next = node->next;
 
-        if (level->headNode.next) level->headNode.next->prev = node;
+        if (level->headNode.next)
+            level->headNode.next->prev = node;
         node->next = level->headNode.next;
         node->prev = &level->headNode;
         level->headNode.next = node;
@@ -1927,62 +1870,69 @@ AddWayPoint(point2f coords, u08 isvert = 1)
     }
 }
 
-global_function
-void
+global_function void
 RemoveWayPoint(waypoint *wayp)
 {
     switch (Waypoint_Editor->nWaypointsActive)
     {
-        case 0:
-            wayp = 0;
-            break;
+    case 0:
+        wayp = 0;
+        break;
 
-        case 1:
-            Waypoint_Editor->activeWaypoints.next = 0;
-            Waypoint_Editor->nWaypointsActive = 0;
-            break;
+    case 1:
+        Waypoint_Editor->activeWaypoints.next = 0;
+        Waypoint_Editor->nWaypointsActive = 0;
+        break;
 
-        default:
-            if (wayp->next) wayp->next->prev = wayp->prev;
-            if (wayp->prev) wayp->prev->next = wayp->next;
-            --Waypoint_Editor->nWaypointsActive;
+    default:
+        if (wayp->next)
+            wayp->next->prev = wayp->prev;
+        if (wayp->prev)
+            wayp->prev->next = wayp->next;
+        --Waypoint_Editor->nWaypointsActive;
     }
 
     if (wayp)
     {
         wayp->next = Waypoint_Editor->freeWaypoints.next;
-        if (Waypoint_Editor->freeWaypoints.next) Waypoint_Editor->freeWaypoints.next->prev = wayp;
+        if (Waypoint_Editor->freeWaypoints.next)
+            Waypoint_Editor->freeWaypoints.next->prev = wayp;
         Waypoint_Editor->freeWaypoints.next = wayp;
         wayp->prev = &Waypoint_Editor->freeWaypoints;
 
         waypoint_quadtree_node *node = wayp->node;
 
-        if (node->next) node->next->prev = node->prev;
-        if (node->prev) node->prev->next = node->next;
+        if (node->next)
+            node->next->prev = node->prev;
+        if (node->prev)
+            node->prev->next = node->next;
         node->prev = 0;
 
-        if (Waypoint_Editor->freeNodes.next) Waypoint_Editor->freeNodes.next->prev = node;
+        if (Waypoint_Editor->freeNodes.next)
+            Waypoint_Editor->freeNodes.next->prev = node;
         node->next = Waypoint_Editor->freeNodes.next;
         Waypoint_Editor->freeNodes.next = node;
         node->prev = &Waypoint_Editor->freeNodes;
     }
 }
 
-global_function
-void
+global_function void
 UpdateWayPoint(waypoint *wayp, point2f coords)
 {
     waypoint_quadtree_node *node = wayp->node;
 
-    if (node->next) node->next->prev = node->prev;
-    if (node->prev) node->prev->next = node->next;
+    if (node->next)
+        node->next->prev = node->prev;
+    if (node->prev)
+        node->prev->next = node->next;
     node->prev = 0;
 
     wayp->coords = coords;
 
     waypoint_quadtree_level *level = GetWaypointQuadTreeLevel(wayp->coords);
 
-    if (level->headNode.next) level->headNode.next->prev = node;
+    if (level->headNode.next)
+        level->headNode.next->prev = node;
     node->next = level->headNode.next;
     node->prev = &level->headNode;
     level->headNode.next = node;
@@ -1991,9 +1941,8 @@ UpdateWayPoint(waypoint *wayp, point2f coords)
     node->wayp = wayp;
 }
 
-global_function
-void
-MouseMove(GLFWwindow* window, f64 x, f64 y)
+global_function void
+MouseMove(GLFWwindow *window, f64 x, f64 y)
 {
     if (Loading)
     {
@@ -2042,24 +1991,25 @@ MouseMove(GLFWwindow* window, f64 x, f64 y)
                 while (testContig == contig)
                 {
                     testContig = pixel1 < pixel2 ? Map_State->contigIds[++testPixel] : Map_State->contigIds[--testPixel];
-                    if (testPixel == 0 || testPixel >= (nPixels - 1)) break;
+                    if (testPixel == 0 || testPixel >= (nPixels - 1))
+                        break;
                 }
                 pixel2 = pixel1 < pixel2 ? testPixel - 1 : testPixel + 1;
             }
-            
+
             if (Edit_Pixels.selecting)
             {
                 Edit_Pixels.selectPixels.x = Max(pixel1, Max(Edit_Pixels.selectPixels.x, Edit_Pixels.selectPixels.y));
-                while(  Edit_Pixels.selectPixels.x < (Number_of_Pixels_1D - 1) &&
-                        ((Edit_Pixels.scaffSelecting && Map_State->scaffIds[Edit_Pixels.selectPixels.x] && Map_State->scaffIds[Edit_Pixels.selectPixels.x] == Map_State->scaffIds[1 + Edit_Pixels.selectPixels.x] ) || 
-                          Map_State->contigIds[Edit_Pixels.selectPixels.x] == Map_State->contigIds[1 + Edit_Pixels.selectPixels.x]))
+                while (Edit_Pixels.selectPixels.x < (Number_of_Pixels_1D - 1) &&
+                       ((Edit_Pixels.scaffSelecting && Map_State->scaffIds[Edit_Pixels.selectPixels.x] && Map_State->scaffIds[Edit_Pixels.selectPixels.x] == Map_State->scaffIds[1 + Edit_Pixels.selectPixels.x]) ||
+                        Map_State->contigIds[Edit_Pixels.selectPixels.x] == Map_State->contigIds[1 + Edit_Pixels.selectPixels.x]))
                 {
                     ++Edit_Pixels.selectPixels.x;
                 }
 
                 Edit_Pixels.selectPixels.y = Min(pixel1, Min(Edit_Pixels.selectPixels.x, Edit_Pixels.selectPixels.y));
-                while(  Edit_Pixels.selectPixels.y > 0 &&
-                        ((Edit_Pixels.scaffSelecting && Map_State->scaffIds[Edit_Pixels.selectPixels.y] && Map_State->scaffIds[Edit_Pixels.selectPixels.y] == Map_State->scaffIds[Edit_Pixels.selectPixels.y - 1]) || Map_State->contigIds[Edit_Pixels.selectPixels.y] == Map_State->contigIds[Edit_Pixels.selectPixels.y - 1]))
+                while (Edit_Pixels.selectPixels.y > 0 &&
+                       ((Edit_Pixels.scaffSelecting && Map_State->scaffIds[Edit_Pixels.selectPixels.y] && Map_State->scaffIds[Edit_Pixels.selectPixels.y] == Map_State->scaffIds[Edit_Pixels.selectPixels.y - 1]) || Map_State->contigIds[Edit_Pixels.selectPixels.y] == Map_State->contigIds[Edit_Pixels.selectPixels.y - 1]))
                 {
                     --Edit_Pixels.selectPixels.y;
                 }
@@ -2075,7 +2025,7 @@ MouseMove(GLFWwindow* window, f64 x, f64 y)
                 s32 diff = (s32)midPixel - (s32)oldMidPixel;
 
                 u32 forward = diff > 0;
-                
+
                 s32 newX = (s32)Edit_Pixels.pixels.x + diff;
                 newX = Max(0, Min((s32)nPixels - 1, newX));
                 s32 newY = (s32)Edit_Pixels.pixels.y + diff;
@@ -2085,16 +2035,16 @@ MouseMove(GLFWwindow* window, f64 x, f64 y)
                 s32 diffy = newY - (s32)Edit_Pixels.pixels.y;
 
                 diff = forward ? Min(diffx, diffy) : Max(diffx, diffy);
-                
-                //newX = (s32)Edit_Pixels.pixels.x + diff;
-                //newY = (s32)Edit_Pixels.pixels.y + diff;
-                
+
+                // newX = (s32)Edit_Pixels.pixels.x + diff;
+                // newY = (s32)Edit_Pixels.pixels.y + diff;
+
                 diff = RearrangeMap(Edit_Pixels.pixels.x, Edit_Pixels.pixels.y, diff, Edit_Pixels.snap);
                 netDelta += diff;
 
                 newX = (s32)Edit_Pixels.pixels.x + diff;
                 newY = (s32)Edit_Pixels.pixels.y + diff;
-                
+
                 Edit_Pixels.pixels.x = (u32)newX;
                 Edit_Pixels.pixels.y = (u32)newY;
 
@@ -2108,7 +2058,7 @@ MouseMove(GLFWwindow* window, f64 x, f64 y)
                     AddMapEdit(netDelta, Edit_Pixels.pixels, Global_Edit_Invert_Flag);
                     netDelta = 0;
                 }
-                
+
                 wx = (f32)(((f64)((2 * pixel1) + 1)) / ((f64)(2 * nPixels))) - 0.5f;
                 wy = (f32)(((f64)((2 * pixel2) + 1)) / ((f64)(2 * nPixels))) - 0.5f;
 
@@ -2116,7 +2066,7 @@ MouseMove(GLFWwindow* window, f64 x, f64 y)
                 Edit_Pixels.pixels.y = pixel2;
                 Edit_Pixels.worldCoords.x = wx;
                 Edit_Pixels.worldCoords.y = wy;
-                
+
                 Global_Edit_Invert_Flag = 0;
             }
 
@@ -2155,13 +2105,13 @@ MouseMove(GLFWwindow* window, f64 x, f64 y)
                 f32 selectDis = Waypoint_Select_Distance / (height * Camera_Position.z);
                 f32 closestDistanceSq = selectDis * selectDis;
 
-                waypoint **searchBuffer = PushArray(Working_Set, waypoint*, Waypoints_Stack_Size);
+                waypoint **searchBuffer = PushArray(Working_Set, waypoint *, Waypoints_Stack_Size);
                 waypoint **bufferEnd = searchBuffer;
-                GetWaypointsWithinSquare({Tool_Tip_Move.worldCoords.x - selectDis, Tool_Tip_Move.worldCoords.y - selectDis}, 
-                        2.0f * selectDis, &bufferEnd);
-                for (   waypoint **waypPtr = searchBuffer;
-                        waypPtr != bufferEnd;
-                        ++waypPtr )
+                GetWaypointsWithinSquare({Tool_Tip_Move.worldCoords.x - selectDis, Tool_Tip_Move.worldCoords.y - selectDis},
+                                         2.0f * selectDis, &bufferEnd);
+                for (waypoint **waypPtr = searchBuffer;
+                     waypPtr != bufferEnd;
+                     ++waypPtr)
                 {
                     waypoint *wayp = *waypPtr;
 
@@ -2196,7 +2146,8 @@ MouseMove(GLFWwindow* window, f64 x, f64 y)
                         }
                     }
                 }
-                else Scaff_Painting_Id = 0;
+                else
+                    Scaff_Painting_Id = 0;
 
                 if (Map_State->scaffIds[Tool_Tip_Move.pixels.x] != Scaff_Painting_Id || (Scaff_FF_Flag & 1))
                 {
@@ -2207,15 +2158,18 @@ MouseMove(GLFWwindow* window, f64 x, f64 y)
                     Map_State->scaffIds[pixel] = Scaff_Painting_Id;
 
                     u32 testPixel = pixel;
-                    while (testPixel && (Map_State->contigIds[testPixel - 1] == contigId)) Map_State->scaffIds[--testPixel] = Scaff_Painting_Id;
+                    while (testPixel && (Map_State->contigIds[testPixel - 1] == contigId))
+                        Map_State->scaffIds[--testPixel] = Scaff_Painting_Id;
 
                     testPixel = pixel;
-                    while ((testPixel < (Number_of_Pixels_1D - 1)) && (Map_State->contigIds[testPixel + 1] == contigId)) Map_State->scaffIds[++testPixel] = Scaff_Painting_Id;
+                    while ((testPixel < (Number_of_Pixels_1D - 1)) && (Map_State->contigIds[testPixel + 1] == contigId))
+                        Map_State->scaffIds[++testPixel] = Scaff_Painting_Id;
 
                     if (Scaff_FF_Flag & 1)
                     {
                         ++testPixel;
-                        while ((testPixel < Number_of_Pixels_1D) && ((Scaff_FF_Flag & 2) || (Map_State->scaffIds[testPixel] == (Scaff_Painting_Flag == 1 ? 0 : currScaffId)))) Map_State->scaffIds[testPixel++] = Scaff_Painting_Id;
+                        while ((testPixel < Number_of_Pixels_1D) && ((Scaff_FF_Flag & 2) || (Map_State->scaffIds[testPixel] == (Scaff_Painting_Flag == 1 ? 0 : currScaffId))))
+                            Map_State->scaffIds[testPixel++] = Scaff_Painting_Id;
                     }
                 }
 
@@ -2226,21 +2180,27 @@ MouseMove(GLFWwindow* window, f64 x, f64 y)
                 u32 pixel = Tool_Tip_Move.pixels.x;
                 u32 contigId = Map_State->contigIds[pixel];
 
-                if (MetaData_Edit_State == 1) Map_State->metaDataFlags[pixel] |= (1 << MetaData_Active_Tag);
-                else Map_State->metaDataFlags[pixel] &= ~(1 << MetaData_Active_Tag);
-                
+                if (MetaData_Edit_State == 1)
+                    Map_State->metaDataFlags[pixel] |= (1 << MetaData_Active_Tag);
+                else
+                    Map_State->metaDataFlags[pixel] &= ~(1 << MetaData_Active_Tag);
+
                 u32 testPixel = pixel;
                 while (testPixel && (Map_State->contigIds[testPixel - 1] == contigId))
                 {
-                    if (MetaData_Edit_State == 1) Map_State->metaDataFlags[--testPixel] |= (1 << MetaData_Active_Tag);
-                    else Map_State->metaDataFlags[--testPixel] &= ~(1 << MetaData_Active_Tag);
+                    if (MetaData_Edit_State == 1)
+                        Map_State->metaDataFlags[--testPixel] |= (1 << MetaData_Active_Tag);
+                    else
+                        Map_State->metaDataFlags[--testPixel] &= ~(1 << MetaData_Active_Tag);
                 }
 
                 testPixel = pixel;
                 while ((testPixel < (Number_of_Pixels_1D - 1)) && (Map_State->contigIds[testPixel + 1] == contigId))
                 {
-                    if (MetaData_Edit_State == 1) Map_State->metaDataFlags[++testPixel] |= (1 << MetaData_Active_Tag);
-                    else Map_State->metaDataFlags[++testPixel] &= ~(1 << MetaData_Active_Tag);
+                    if (MetaData_Edit_State == 1)
+                        Map_State->metaDataFlags[++testPixel] |= (1 << MetaData_Active_Tag);
+                    else
+                        Map_State->metaDataFlags[++testPixel] &= ~(1 << MetaData_Active_Tag);
                 }
 
                 UpdateContigsFromMapState();
@@ -2277,29 +2237,28 @@ MouseMove(GLFWwindow* window, f64 x, f64 y)
 }
 
 global_variable
-u08
-Mouse_Invert = 0;
+    u08
+        Mouse_Invert = 0;
 
 global_variable
-u08
-Grey_Haplotigs = 1;
+    u08
+        Grey_Haplotigs = 1;
 
 global_variable
-u08
-Deferred_Close_UI = 0;
+    u08
+        Deferred_Close_UI = 0;
 
-global_function
-void
-Mouse(GLFWwindow* window, s32 button, s32 action, s32 mods)
+global_function void
+Mouse(GLFWwindow *window, s32 button, s32 action, s32 mods)
 {
     s32 primaryMouse = Mouse_Invert ? GLFW_MOUSE_BUTTON_RIGHT : GLFW_MOUSE_BUTTON_LEFT;
-    s32 secondaryMouse = Mouse_Invert ? GLFW_MOUSE_BUTTON_LEFT : GLFW_MOUSE_BUTTON_RIGHT;    
-    
+    s32 secondaryMouse = Mouse_Invert ? GLFW_MOUSE_BUTTON_LEFT : GLFW_MOUSE_BUTTON_RIGHT;
+
     if (Loading)
     {
         return;
     }
-    
+
     (void)mods;
 
     f64 x, y;
@@ -2318,7 +2277,8 @@ Mouse(GLFWwindow* window, s32 button, s32 action, s32 mods)
         {
             Edit_Pixels.editing = !Edit_Pixels.editing;
             MouseMove(window, x, y);
-            if (!Edit_Pixels.editing) UpdateScaffolds();
+            if (!Edit_Pixels.editing)
+                UpdateScaffolds();
             sortMetaEdits = 0;
         }
         else if (button == GLFW_MOUSE_BUTTON_MIDDLE && Edit_Mode && action == GLFW_RELEASE && !Edit_Pixels.editing)
@@ -2344,7 +2304,7 @@ Mouse(GLFWwindow* window, s32 button, s32 action, s32 mods)
         }
         else if (button == primaryMouse && Waypoint_Edit_Mode && action == GLFW_PRESS)
         {
-            if(hztwaypoints) 
+            if (hztwaypoints)
             {
                 AddWayPoint(Tool_Tip_Move.worldCoords, 0);
                 MouseMove(window, x, y);
@@ -2419,19 +2379,17 @@ Mouse(GLFWwindow* window, s32 button, s32 action, s32 mods)
     }
 }
 
-global_variable
-struct nk_vec2
-NK_Scroll;
+global_variable struct nk_vec2
+    NK_Scroll;
 
-global_function
-void
-Scroll(GLFWwindow* window, f64 x, f64 y)
+global_function void
+Scroll(GLFWwindow *window, f64 x, f64 y)
 {
     if (Loading)
     {
         return;
     }
-    
+
     if (UI_On)
     {
         NK_Scroll.y = (f32)y;
@@ -2455,16 +2413,15 @@ Scroll(GLFWwindow* window, f64 x, f64 y)
 }
 
 global_variable
-u64
-Total_Genome_Length;
+    u64
+        Total_Genome_Length;
 
-global_function
-void
+global_function void
 Setup();
 
 global_function
-u32
-SubDivideScaleBar(f32 left, f32 right, f32 middle, f32 bpPerPixel, f32 offset)
+    u32
+    SubDivideScaleBar(f32 left, f32 right, f32 middle, f32 bpPerPixel, f32 offset)
 {
     u32 result = 0;
 
@@ -2481,31 +2438,30 @@ SubDivideScaleBar(f32 left, f32 right, f32 middle, f32 bpPerPixel, f32 offset)
         {
             u32 leftResult = SubDivideScaleBar(left, middle - halfWidth, (left + middle) * 0.5f, bpPerPixel, offset);
             u32 rightResult = SubDivideScaleBar(middle + halfWidth, right, (right + middle) * 0.5f, bpPerPixel, offset);
-            result = 1 + Min(leftResult, rightResult);   
+            result = 1 + Min(leftResult, rightResult);
         }
     }
 
-    return(result);
+    return (result);
 }
 
 global_variable
-u32
-File_Loaded = 0;
+    u32
+        File_Loaded = 0;
 
 global_variable
-nk_color
-Theme_Colour;
+    nk_color
+        Theme_Colour;
 
 #ifdef Internal
-global_function
-void
-DrawQuadTreeLevel (u32 *ptr, waypoint_quadtree_level *level, vertex *vert, f32 lineWidth, u32 n = 0)
+global_function void
+DrawQuadTreeLevel(u32 *ptr, waypoint_quadtree_level *level, vertex *vert, f32 lineWidth, u32 n = 0)
 {
     f32 colour[5][4] = {{1.0f, 0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 1.0f}, {1.0f, 0.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f, 1.0f}};
-    f32 *col = (f32 *)colour[n%5];
+    f32 *col = (f32 *)colour[n % 5];
 
     glUniform4fv(Flat_Shader->colorLocation, 1, col);
-    
+
     if (level->show)
     {
         vert[0].x = level->lowerBound.x;
@@ -2569,30 +2525,29 @@ DrawQuadTreeLevel (u32 *ptr, waypoint_quadtree_level *level, vertex *vert, f32 l
     {
         ForLoop(4)
         {
-            DrawQuadTreeLevel(ptr, level->children[index], vert, lineWidth, n+1);
+            DrawQuadTreeLevel(ptr, level->children[index], vert, lineWidth, n + 1);
         }
     }
 }
 #endif
 
 global_function
-u32
-FourFloatColorToU32(nk_colorf colour)
+    u32
+    FourFloatColorToU32(nk_colorf colour)
 {
-    return(glfonsRGBA((u08)(colour.r * 255.0f), (u08)(colour.g * 255.0f),
-                (u08)(colour.b * 255.0f), (u08)(colour.a * 255.0f)));
+    return (glfonsRGBA((u08)(colour.r * 255.0f), (u08)(colour.g * 255.0f),
+                       (u08)(colour.b * 255.0f), (u08)(colour.a * 255.0f)));
 }
 
 global_function
-u32
-ThreeFloatColorToU32(nk_colorf colour)
+    u32
+    ThreeFloatColorToU32(nk_colorf colour)
 {
-    return(glfonsRGBA((u08)(colour.r * 255.0f), (u08)(colour.g * 255.0f),
-                (u08)(colour.b * 255.0f), 255));
+    return (glfonsRGBA((u08)(colour.r * 255.0f), (u08)(colour.g * 255.0f),
+                       (u08)(colour.b * 255.0f), 255));
 }
 
-global_function
-void
+global_function void
 ColourGenerator(u32 index, f32 *rgb)
 {
     f32 RedFreq = meta_dataColors[meta_data_curcolorProfile][0];
@@ -2604,13 +2559,16 @@ ColourGenerator(u32 index, f32 *rgb)
     rgb[2] = 0.5f * (sinf((f32)index * BlueFreq) + 1.0f);
 }
 
-void DrawOutlinedText(FONScontext* FontStash_Context, nk_colorf* colour, const char* text, f32 x, f32 y) {
-    
+void DrawOutlinedText(FONScontext *FontStash_Context, nk_colorf *colour, const char *text, f32 x, f32 y)
+{
+
     nk_colorf outlineColor;
-    if(meta_outline->on == 2) {
+    if (meta_outline->on == 2)
+    {
         outlineColor = {1.0f, 1.0f, 1.0f, 1.0f};
     }
-    else {
+    else
+    {
         outlineColor = {0.0f, 0.0f, 0.0f, 1.0f};
     }
 
@@ -2631,7 +2589,7 @@ void DrawOutlinedText(FONScontext* FontStash_Context, nk_colorf* colour, const c
 }
 
 struct
-graph
+    graph
 {
     u32 name[16];
     u32 *data;
@@ -2647,21 +2605,18 @@ graph
     u08 activecolor;
 };
 
-enum
-extension_type
+enum extension_type
 {
     extension_graph,
 };
 
-global_variable
-char
-Extension_Magic_Bytes[][4] = 
-{
-    {'p', 's', 'g', 'h'}
-};
+global_variable char
+    Extension_Magic_Bytes[][4] =
+        {
+            {'p', 's', 'g', 'h'}};
 
 struct
-extension_node
+    extension_node
 {
     extension_type type;
     u32 pad;
@@ -2670,18 +2625,17 @@ extension_node
 };
 
 struct
-extension_sentinel
+    extension_sentinel
 {
     extension_node *head;
     extension_node *tail;
 };
 
 global_variable
-extension_sentinel
-Extensions = {};
+    extension_sentinel
+        Extensions = {};
 
-global_function
-void
+global_function void
 AddExtension(extension_node *node)
 {
     node->next = 0;
@@ -2699,11 +2653,10 @@ AddExtension(extension_node *node)
 }
 
 global_function
-u08
-UserLoadState(char *, char *);
+    u08
+    UserLoadState(char *, char *);
 
-global_function
-void
+global_function void
 Render()
 {
     // Projection Matrix
@@ -2720,7 +2673,7 @@ Render()
         // glClearColor(0.29f, 0.545f, 0.659f, 1.0f);    //carolina(blue)
 
         s32 viewport[4];
-        glGetIntegerv (GL_VIEWPORT, viewport);
+        glGetIntegerv(GL_VIEWPORT, viewport);
         width = (f32)viewport[2];
         height = (f32)viewport[3];
 
@@ -2742,13 +2695,13 @@ Render()
         {
             switch (node->type)
             {
-                case extension_graph:
-                    {
-                        graph *gph = (graph *)node->extension;
-                        glUseProgram(gph->shader->shaderProgram);
-                        glUniformMatrix4fv(gph->shader->matLocation, 1, GL_FALSE, mat);
-                    }
-                    break;
+            case extension_graph:
+            {
+                graph *gph = (graph *)node->extension;
+                glUseProgram(gph->shader->shaderProgram);
+                glUniformMatrix4fv(gph->shader->matLocation, 1, GL_FALSE, mat);
+            }
+            break;
             }
         }
     }
@@ -2892,7 +2845,7 @@ Render()
     }
 
     // Quad Trees
-    //if (Waypoint_Edit_Mode)
+    // if (Waypoint_Edit_Mode)
     {
         glUseProgram(Flat_Shader->shaderProgram);
         glUniform4fv(Flat_Shader->colorLocation, 1, (GLfloat *)&QuadTrees->bg);
@@ -2905,7 +2858,7 @@ Render()
         DrawQuadTreeLevel(&ptr, Waypoint_Editor->quadtree, vert, lineWidth);
     }
 #endif
-   
+
     // Extensions
     u08 graphNamesOn = 0;
     {
@@ -2913,31 +2866,32 @@ Render()
         {
             switch (node->type)
             {
-                case extension_graph:
-                    {
-                        graph *gph = (graph *)node->extension;
+            case extension_graph:
+            {
+                graph *gph = (graph *)node->extension;
 
-                        if (gph->on)
-                        {
-                            if (gph->nameOn) graphNamesOn = 1;
+                if (gph->on)
+                {
+                    if (gph->nameOn)
+                        graphNamesOn = 1;
 
-                            f32 factor1 = 1.0f / (2.0f * Camera_Position.z);
-                            f32 factor2 = 2.0f / height;
+                    f32 factor1 = 1.0f / (2.0f * Camera_Position.z);
+                    f32 factor2 = 2.0f / height;
 
-                            f32 wy = (factor1 * (1.0f - (factor2 * (height - gph->base)))) + Camera_Position.y;
+                    f32 wy = (factor1 * (1.0f - (factor2 * (height - gph->base)))) + Camera_Position.y;
 
-                            glUseProgram(gph->shader->shaderProgram);
-                            glUniform4fv(gph->shader->colorLocation, 1, (GLfloat *)&gph->colour);
-                            glUniform1f(gph->shader->yScaleLocation, gph->scale);
-                            glUniform1f(gph->shader->yTopLocation, wy);
-                            glUniform1f(gph->shader->lineSizeLocation, gph->lineSize / Camera_Position.z);
+                    glUseProgram(gph->shader->shaderProgram);
+                    glUniform4fv(gph->shader->colorLocation, 1, (GLfloat *)&gph->colour);
+                    glUniform1f(gph->shader->yScaleLocation, gph->scale);
+                    glUniform1f(gph->shader->yTopLocation, wy);
+                    glUniform1f(gph->shader->lineSizeLocation, gph->lineSize / Camera_Position.z);
 
-                            glBindBuffer(GL_ARRAY_BUFFER, gph->vbo);
-                            glBindVertexArray(gph->vao);
-                            glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)Number_of_Pixels_1D);
-                        }
-                    }
-                    break;
+                    glBindBuffer(GL_ARRAY_BUFFER, gph->vbo);
+                    glBindVertexArray(gph->vao);
+                    glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)Number_of_Pixels_1D);
+                }
+            }
+            break;
             }
         }
     }
@@ -3124,8 +3078,10 @@ Render()
         f32 h2 = height * 0.5f;
         f32 hz = height * Camera_Position.z;
 
-        auto ModelXToScreen = [hz, w2](f32 xin)->f32 { return(((xin - Camera_Position.x) * hz) + w2); };
-        auto ModelYToScreen = [hz, h2](f32 yin)->f32 { return(h2 - ((yin - Camera_Position.y) * hz)); };
+        auto ModelXToScreen = [hz, w2](f32 xin) -> f32
+        { return (((xin - Camera_Position.x) * hz) + w2); };
+        auto ModelYToScreen = [hz, h2](f32 yin) -> f32
+        { return (h2 - ((yin - Camera_Position.y) * hz)); };
 
         // Text Projection Matrix
         {
@@ -3166,17 +3122,17 @@ Render()
             {
                 switch (node->type)
                 {
-                    case extension_graph:
-                        {
-                            graph *gph = (graph *)node->extension;
+                case extension_graph:
+                {
+                    graph *gph = (graph *)node->extension;
 
-                            if (gph->on && gph->nameOn)
-                            {
-                                fonsSetColor(FontStash_Context, ThreeFloatColorToU32(gph->colour));
-                                fonsDrawText(FontStash_Context, x, h - gph->base, (const char *)gph->name, 0);
-                            }
-                        }
-                        break;
+                    if (gph->on && gph->nameOn)
+                    {
+                        fonsSetColor(FontStash_Context, ThreeFloatColorToU32(gph->colour));
+                        fonsDrawText(FontStash_Context, x, h - gph->base, (const char *)gph->name, 0);
+                    }
+                }
+                break;
                 }
             }
         }
@@ -3196,7 +3152,7 @@ Render()
 
             glViewport(0, 0, (s32)width, (s32)height);
 
-            f32 lh = 0.0f;   
+            f32 lh = 0.0f;
 
             fonsClearState(FontStash_Context);
             fonsSetSize(FontStash_Context, Contig_Name_Labels->size * Screen_Scale.x);
@@ -3212,7 +3168,7 @@ Render()
             ForLoop(Contigs->numberOfContigs)
             {
                 contig *cont = Contigs->contigs + index;
-                
+
                 totalLength += (f32)((f64)cont->length / (f64)Number_of_Pixels_1D);
 
                 f32 rightPixel = ModelXToScreen(totalLength - 0.5f);
@@ -3265,7 +3221,7 @@ Render()
             ForLoop(Contigs->numberOfContigs)
             {
                 contig *cont = Contigs->contigs + index;
-                
+
                 totalLength += (f32)((f64)cont->length / (f64)Number_of_Pixels_1D);
 
                 f32 bottomPixel = ModelYToScreen(0.5f - totalLength);
@@ -3319,16 +3275,16 @@ Render()
             glUseProgram(Flat_Shader->shaderProgram);
             glUniform4fv(Flat_Shader->colorLocation, 1, (GLfloat *)&Scale_Bars->bg);
             glUniformMatrix4fv(Flat_Shader->matLocation, 1, GL_FALSE, textNormalMat);
-            
+
             glUseProgram(UI_Shader->shaderProgram);
             glUniformMatrix4fv(UI_Shader->matLocation, 1, GL_FALSE, textNormalMat);
-            
+
             u32 ptr = 0;
             vertex vert[4];
 
             glViewport(0, 0, (s32)width, (s32)height);
 
-            f32 lh = 0.0f;   
+            f32 lh = 0.0f;
 
             fonsClearState(FontStash_Context);
             fonsSetSize(FontStash_Context, Scale_Bars->size * Screen_Scale.x);
@@ -3347,14 +3303,14 @@ Render()
             f32 bpPerPixel = (f32)((f64)Total_Genome_Length / (f64)(rightPixel - leftPixel));
 
             GLfloat *bg = (GLfloat *)&Scale_Bars->bg;
-                        
+
             f32 scaleBarWidth = Scale_Bars->size * 4.0f / 20.0f * Screen_Scale.x;
             f32 tickLength = Scale_Bars->size * 3.0f / 20.0f * Screen_Scale.x;
 
             ForLoop(Contigs->numberOfContigs)
             {
                 contig *cont = Contigs->contigs + index;
-                
+
                 totalLength += (f32)((f64)cont->length / (f64)Number_of_Pixels_1D);
                 rightPixel = ModelXToScreen(totalLength - 0.5f);
 
@@ -3442,7 +3398,7 @@ Render()
 
             ChangeSize((s32)width, (s32)height);
         }
-        
+
         // Waypoint Edit Mode
         if (File_Loaded && (Waypoint_Edit_Mode || Waypoints_Always_Visible))
         {
@@ -3462,11 +3418,11 @@ Render()
             f32 lineWidth = Waypoint_Mode_Data->size / DefaultWaypointSize * 0.7f * Screen_Scale.x;
             f32 lineHeight = Waypoint_Mode_Data->size / DefaultWaypointSize * 8.0f * Screen_Scale.x;
 
-            f32 lh = 0.0f;   
+            f32 lh = 0.0f;
 
             u32 baseColour = FourFloatColorToU32(Waypoint_Mode_Data->base);
             u32 selectColour = FourFloatColorToU32(Waypoint_Mode_Data->selected);
-            
+
             fonsClearState(FontStash_Context);
             fonsSetSize(FontStash_Context, Waypoint_Mode_Data->size * Screen_Scale.x);
             fonsSetAlign(FontStash_Context, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
@@ -3488,9 +3444,9 @@ Render()
                     glUniform4fv(Flat_Shader->colorLocation, 1, (f32 *)&Waypoint_Mode_Data->selected);
                 }
 
-                if(node->isvertical)
+                if (node->isvertical)
                 {
-                    //Vertical waypoint line
+                    // Vertical waypoint line
                     vert[0].x = screen.x - lineWidth;
                     vert[0].y = screenYRange.x;
                     vert[1].x = screen.x - lineWidth;
@@ -3505,7 +3461,7 @@ Render()
                     glBindVertexArray(Waypoint_Data->vaos[ptr++]);
                     glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
 
-                    //crosshair for vertical waypoint
+                    // crosshair for vertical waypoint
                     vert[0].x = screen.x - lineHeight;
                     vert[0].y = screen.y - lineWidth;
                     vert[1].x = screen.x - lineHeight;
@@ -3534,9 +3490,9 @@ Render()
                     glBindVertexArray(Waypoint_Data->vaos[ptr++]);
                     glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
                 }
-                else 
+                else
                 {
-                    //Horizontal wayppoint line
+                    // Horizontal wayppoint line
                     vert[0].x = screenXRange.x;
                     vert[0].y = screen.y - lineWidth;
                     vert[1].x = screenXRange.y;
@@ -3551,7 +3507,7 @@ Render()
                     glBindVertexArray(Waypoint_Data->vaos[ptr++]);
                     glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
 
-                    //crosshair for horizontal waypoint
+                    // crosshair for horizontal waypoint
                     vert[0].x = screen.x - lineWidth;
                     vert[0].y = screen.y - lineHeight;
                     vert[1].x = screen.x - lineWidth;
@@ -3578,9 +3534,9 @@ Render()
                     glBindBuffer(GL_ARRAY_BUFFER, Waypoint_Data->vbos[ptr]);
                     glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
                     glBindVertexArray(Waypoint_Data->vaos[ptr++]);
-                    glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);  
+                    glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
                 }
-               
+
                 if (node == Selected_Waypoint)
                 {
                     glUniform4fv(Flat_Shader->colorLocation, 1, (f32 *)&Waypoint_Mode_Data->base);
@@ -3591,7 +3547,7 @@ Render()
                 {
                     fonsSetColor(FontStash_Context, selectColour);
                 }
-                
+
                 stbsp_snprintf(buff, sizeof(buff), "%d", node->index + 1);
                 fonsDrawText(FontStash_Context, screen.x + lineWidth + lineWidth, screen.y - lineWidth - lh, buff, 0);
 
@@ -3650,12 +3606,12 @@ Render()
             }
         }
 
-        //Extension Mode
+        // Extension Mode
         if (Extension_Mode && !UI_On)
         {
             u32 ptr = 0;
             vertex vert[4];
-            f32 lh = 0.0f; 
+            f32 lh = 0.0f;
 
             glUseProgram(Flat_Shader->shaderProgram);
             glUniformMatrix4fv(Flat_Shader->matLocation, 1, GL_FALSE, textNormalMat);
@@ -3686,7 +3642,6 @@ Render()
             char *helpText4 = (char *)"G: Graph: gap";
             char *helpText5 = (char *)"R: Graph: repeat_density";
             char *helpText6 = (char *)"T: Graph:telomere";
-            
 
             f32 textWidth = fonsTextBounds(FontStash_Context, 0, 0, helpText5, 0, NULL);
 
@@ -3720,7 +3675,7 @@ Render()
             textY += (1.0f + lh);
             fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText6, 0);
         }
-       
+
         // Scaff Bars
         if (File_Loaded && (Scaff_Edit_Mode || Scaffs_Always_Visible))
         {
@@ -3735,7 +3690,7 @@ Render()
             vertex vert[4];
             f32 barColour[4] = {1.0f, 1.0f, 1.0f, 0.5f};
 
-            f32 lh = 0.0f;   
+            f32 lh = 0.0f;
             fonsClearState(FontStash_Context);
 #define DefaultScaffSize 40.0f
             fonsSetSize(FontStash_Context, Scaff_Mode_Data->size * Screen_Scale.x);
@@ -3890,7 +3845,7 @@ Render()
             u32 ptr = 0;
             f32 barColour[4] = {1.0f, 1.0f, 1.0f, 0.5f};
 
-            f32 lh = 0.0f;   
+            f32 lh = 0.0f;
             fonsClearState(FontStash_Context);
 #define DefaultMetaDataSize 20.0f
             fonsSetSize(FontStash_Context, MetaData_Mode_Data->size * Screen_Scale.x);
@@ -3916,20 +3871,20 @@ Render()
                             f32 textWidth = fonsTextBounds(FontStash_Context, 0, 0, (char *)Meta_Data->tags[index2], 0, NULL);
                             ColourGenerator(index2 + 1, colour);
 
-                            if(meta_outline->on) {
-                                //position of text
+                            if (meta_outline->on)
+                            {
+                                // position of text
                                 f32 textX = ModelXToScreen(0.5f * (position + start - 1.0f)) - (0.5f * textWidth);
                                 f32 textY = ModelYToScreen((0.5f * (1.0f - position - start))) - (lh * (f32)(++tmp));
 
-                                DrawOutlinedText(FontStash_Context, (nk_colorf*)colour, (char*)Meta_Data->tags[index2], textX, textY);
+                                DrawOutlinedText(FontStash_Context, (nk_colorf *)colour, (char *)Meta_Data->tags[index2], textX, textY);
                             }
                             else
                             {
                                 fonsSetColor(FontStash_Context, FourFloatColorToU32(*((nk_colorf *)colour)));
                                 fonsDrawText(FontStash_Context, ModelXToScreen(0.5f * (position + start - 1.0f)) - (0.5f * textWidth), ModelYToScreen((0.5f * (1.0f - position - start))) - (lh * (f32)(++tmp)), (char *)Meta_Data->tags[index2], 0);
-
                             }
-                            
+
                             // Check if the tag is "Haplotig"
                             if (strcmp((char *)Meta_Data->tags[index2], "Haplotig") == 0)
                             {
@@ -4027,7 +3982,7 @@ Render()
                 fonsDrawText(FontStash_Context, width - spacing - textWidth, height - spacing - textBoxHeight + textY, helpText7, 0);
             }
         }
-        
+
         // Tool Tip
         if (File_Loaded && Tool_Tip->on && !Edit_Mode && !UI_On)
         {
@@ -4042,7 +3997,7 @@ Render()
 
             glViewport(0, 0, (s32)width, (s32)height);
 
-            f32 lh = 0.0f;   
+            f32 lh = 0.0f;
 
             fonsClearState(FontStash_Context);
             fonsSetSize(FontStash_Context, Tool_Tip->size * Screen_Scale.x);
@@ -4050,7 +4005,7 @@ Render()
             fonsSetFont(FontStash_Context, Font_Normal);
             fonsVertMetrics(FontStash_Context, 0, 0, &lh);
             fonsSetColor(FontStash_Context, FourFloatColorToU32(Tool_Tip->fg));
-           
+
             // Extension info, extra lines
             u32 nExtra = 0;
             f32 longestExtraLineLength = 0.0f;
@@ -4062,23 +4017,23 @@ Render()
                     {
                         switch (node->type)
                         {
-                            case extension_graph:
-                                {
-                                    graph *gph = (graph *)node->extension;
-                                    if (gph->on)
-                                    {
-                                        glBindBuffer(GL_TEXTURE_BUFFER, Contact_Matrix->pixelRearrangmentLookupBuffer);
-                                        u32 *buffer = (u32 *)glMapBufferRange(GL_TEXTURE_BUFFER, Tool_Tip_Move.pixels.x * sizeof(u32), sizeof(u32), GL_MAP_READ_BIT);
+                        case extension_graph:
+                        {
+                            graph *gph = (graph *)node->extension;
+                            if (gph->on)
+                            {
+                                glBindBuffer(GL_TEXTURE_BUFFER, Contact_Matrix->pixelRearrangmentLookupBuffer);
+                                u32 *buffer = (u32 *)glMapBufferRange(GL_TEXTURE_BUFFER, Tool_Tip_Move.pixels.x * sizeof(u32), sizeof(u32), GL_MAP_READ_BIT);
 
-                                        stbsp_snprintf(buff, sizeof(buff), "%s: %$d", (char *)gph->name, gph->data[*buffer]);
-                                        ++nExtra;
-                                        longestExtraLineLength = Max(longestExtraLineLength, fonsTextBounds(FontStash_Context, 0, 0, buff, 0, NULL));
+                                stbsp_snprintf(buff, sizeof(buff), "%s: %$d", (char *)gph->name, gph->data[*buffer]);
+                                ++nExtra;
+                                longestExtraLineLength = Max(longestExtraLineLength, fonsTextBounds(FontStash_Context, 0, 0, buff, 0, NULL));
 
-                                        glUnmapBuffer(GL_TEXTURE_BUFFER);
-                                        glBindBuffer(GL_TEXTURE_BUFFER, 0);
-                                    }
-                                }
-                                break;
+                                glUnmapBuffer(GL_TEXTURE_BUFFER);
+                                glBindBuffer(GL_TEXTURE_BUFFER, 0);
+                            }
+                        }
+                        break;
                         }
                     }
                 }
@@ -4092,7 +4047,7 @@ Render()
             u32 id2 = Map_State->originalContigIds[Tool_Tip_Move.pixels.y];
             u32 coord1 = Map_State->contigRelCoords[Tool_Tip_Move.pixels.x];
             u32 coord2 = Map_State->contigRelCoords[Tool_Tip_Move.pixels.y];
-            
+
             f64 bpPerPixel = (f64)Total_Genome_Length / (f64)Number_of_Pixels_1D;
 
             char line1[64];
@@ -4134,12 +4089,12 @@ Render()
             glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
 
             glUseProgram(UI_Shader->shaderProgram);
-            fonsDrawText(FontStash_Context, ModelXToScreen(Tool_Tip_Move.worldCoords.x) + spacing, 
-                    ModelYToScreen(-Tool_Tip_Move.worldCoords.y) + spacing, line1, 0);
-            fonsDrawText(FontStash_Context, ModelXToScreen(Tool_Tip_Move.worldCoords.x) + spacing, 
-                    ModelYToScreen(-Tool_Tip_Move.worldCoords.y) + spacing + lh + 1.0f, line2, 0);
-            fonsDrawText(FontStash_Context, ModelXToScreen(Tool_Tip_Move.worldCoords.x) + spacing, 
-                    ModelYToScreen(-Tool_Tip_Move.worldCoords.y) + spacing + (2.0f * lh) + 2.0f, line3, 0);
+            fonsDrawText(FontStash_Context, ModelXToScreen(Tool_Tip_Move.worldCoords.x) + spacing,
+                         ModelYToScreen(-Tool_Tip_Move.worldCoords.y) + spacing, line1, 0);
+            fonsDrawText(FontStash_Context, ModelXToScreen(Tool_Tip_Move.worldCoords.x) + spacing,
+                         ModelYToScreen(-Tool_Tip_Move.worldCoords.y) + spacing + lh + 1.0f, line2, 0);
+            fonsDrawText(FontStash_Context, ModelXToScreen(Tool_Tip_Move.worldCoords.x) + spacing,
+                         ModelYToScreen(-Tool_Tip_Move.worldCoords.y) + spacing + (2.0f * lh) + 2.0f, line3, 0);
 
             {
                 if (Extensions.head)
@@ -4150,24 +4105,24 @@ Render()
                     {
                         switch (node->type)
                         {
-                            case extension_graph:
-                                {
-                                    graph *gph = (graph *)node->extension;
-                                    if (gph->on)
-                                    {
-                                        glBindBuffer(GL_TEXTURE_BUFFER, Contact_Matrix->pixelRearrangmentLookupBuffer);
-                                        u32 *buffer = (u32 *)glMapBufferRange(GL_TEXTURE_BUFFER, Tool_Tip_Move.pixels.x * sizeof(u32), sizeof(u32), GL_MAP_READ_BIT);
+                        case extension_graph:
+                        {
+                            graph *gph = (graph *)node->extension;
+                            if (gph->on)
+                            {
+                                glBindBuffer(GL_TEXTURE_BUFFER, Contact_Matrix->pixelRearrangmentLookupBuffer);
+                                u32 *buffer = (u32 *)glMapBufferRange(GL_TEXTURE_BUFFER, Tool_Tip_Move.pixels.x * sizeof(u32), sizeof(u32), GL_MAP_READ_BIT);
 
-                                        stbsp_snprintf(buff, sizeof(buff), "%s: %$d", (char *)gph->name, gph->data[*buffer]);
+                                stbsp_snprintf(buff, sizeof(buff), "%s: %$d", (char *)gph->name, gph->data[*buffer]);
 
-                                        fonsDrawText(FontStash_Context, ModelXToScreen(Tool_Tip_Move.worldCoords.x) + spacing, 
-                                                ModelYToScreen(-Tool_Tip_Move.worldCoords.y) + spacing + ((2.0f + (f32)(++count)) * (lh + 1.0f)), buff, 0);
+                                fonsDrawText(FontStash_Context, ModelXToScreen(Tool_Tip_Move.worldCoords.x) + spacing,
+                                             ModelYToScreen(-Tool_Tip_Move.worldCoords.y) + spacing + ((2.0f + (f32)(++count)) * (lh + 1.0f)), buff, 0);
 
-                                        glUnmapBuffer(GL_TEXTURE_BUFFER);
-                                        glBindBuffer(GL_TEXTURE_BUFFER, 0);
-                                    }
-                                }
-                                break;
+                                glUnmapBuffer(GL_TEXTURE_BUFFER);
+                                glBindBuffer(GL_TEXTURE_BUFFER, 0);
+                            }
+                        }
+                        break;
                         }
                     }
                 }
@@ -4189,8 +4144,7 @@ Render()
             glViewport(0, 0, (s32)width, (s32)height);
 
             f32 color[4];
-            f32 *source = (f32 *)(Edit_Pixels.editing ? (Global_Edit_Invert_Flag ? &Edit_Mode_Colours->invSelect : 
-                        &Edit_Mode_Colours->select) : &Edit_Mode_Colours->preSelect);
+            f32 *source = (f32 *)(Edit_Pixels.editing ? (Global_Edit_Invert_Flag ? &Edit_Mode_Colours->invSelect : &Edit_Mode_Colours->select) : &Edit_Mode_Colours->preSelect);
             ForLoop(4)
             {
                 color[index] = source[index];
@@ -4341,15 +4295,15 @@ Render()
             glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
 
             {
-                f32 lh = 0.0f;   
-                
+                f32 lh = 0.0f;
+
                 fonsClearState(FontStash_Context);
                 fonsSetSize(FontStash_Context, 18.0f * Screen_Scale.x);
                 fonsSetAlign(FontStash_Context, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
                 fonsSetFont(FontStash_Context, Font_Normal);
                 fonsVertMetrics(FontStash_Context, 0, 0, &lh);
                 fonsSetColor(FontStash_Context, FourFloatColorToU32(Edit_Mode_Colours->fg));
-                
+
                 f32 textBoxHeight = lh;
                 textBoxHeight *= Edit_Pixels.editing ? 3.0f : 1.0f;
                 textBoxHeight += Edit_Pixels.editing ? 3.0f : 0.0f;
@@ -4376,7 +4330,7 @@ Render()
                 f64 bpPerPixel = (f64)Total_Genome_Length / (f64)nPixels;
 
                 f64 bpStart = bpPerPixel * (f64)Map_State->contigRelCoords[pix1];
-                
+
                 if (Edit_Pixels.editing)
                 {
                     stbsp_snprintf(line2, 64, "%s[%$.2fbp]", cont->name, bpStart);
@@ -4385,7 +4339,7 @@ Render()
                 {
                     line1Done = 0;
                 }
-                
+
                 if (!line1Done)
                 {
                     f64 bpEnd = bpPerPixel * (f64)Map_State->contigRelCoords[pix2];
@@ -4448,7 +4402,7 @@ Render()
                     glBufferSubData(GL_ARRAY_BUFFER, 0, 4 * sizeof(vertex), vert);
                     glBindVertexArray(Edit_Mode_Data->vaos[ptr++]);
                     glDrawRangeElements(GL_TRIANGLES, 0, 3, 6, GL_UNSIGNED_SHORT, NULL);
-                    
+
                     glUseProgram(UI_Shader->shaderProgram);
                     fonsDrawText(FontStash_Context, ModelXToScreen(min) - spacing - textWidth, ModelYToScreen(-min) + spacing, text, 0);
                 }
@@ -4537,8 +4491,7 @@ Render()
                         {NK_VERTEX_POSITION, NK_FORMAT_FLOAT, NK_OFFSETOF(nk_glfw_vertex, position)},
                         {NK_VERTEX_TEXCOORD, NK_FORMAT_FLOAT, NK_OFFSETOF(nk_glfw_vertex, uv)},
                         {NK_VERTEX_COLOR, NK_FORMAT_R8G8B8A8, NK_OFFSETOF(nk_glfw_vertex, col)},
-                        {NK_VERTEX_LAYOUT_END}
-                    };
+                        {NK_VERTEX_LAYOUT_END}};
 
                     NK_MEMSET(&config, 0, sizeof(config));
                     config.vertex_layout = vertex_layout;
@@ -4564,13 +4517,14 @@ Render()
 
                 nk_draw_foreach(cmd, NK_Context, &NK_Device->cmds)
                 {
-                    if (!cmd->elem_count) continue;
+                    if (!cmd->elem_count)
+                        continue;
                     glBindTexture(GL_TEXTURE_2D, (GLuint)cmd->texture.id);
                     glScissor(
-                            (GLint)(cmd->clip_rect.x),
-                            (GLint)(height - cmd->clip_rect.y - cmd->clip_rect.h),
-                            (GLint)(cmd->clip_rect.w),
-                            (GLint)(cmd->clip_rect.h));
+                        (GLint)(cmd->clip_rect.x),
+                        (GLint)(height - cmd->clip_rect.y - cmd->clip_rect.h),
+                        (GLint)(cmd->clip_rect.w),
+                        (GLint)(cmd->clip_rect.h));
                     glDrawElements(GL_TRIANGLES, (GLsizei)cmd->elem_count, GL_UNSIGNED_SHORT, offset);
                     offset += cmd->elem_count;
                 }
@@ -4604,18 +4558,16 @@ Render()
 }
 
 struct
-file_atlas_entry
+    file_atlas_entry
 {
     u32 base;
     u32 nBytes;
 };
 
-global_variable
-file_atlas_entry *
-File_Atlas;
+global_variable file_atlas_entry *
+    File_Atlas;
 
-global_function
-void
+global_function void
 LoadTexture(void *in)
 {
     GLuint *textureHandle = (GLuint *)in;
@@ -4627,9 +4579,8 @@ LoadTexture(void *in)
     buffer->x = id[0];
     buffer->y = id[1];
 
-    u32 linearIndex =   (buffer->x * (Number_of_Textures_1D - 1)) -
-        ((buffer->x & 1) ? (((buffer->x-1)>>1) * buffer->x) : 
-         ((buffer->x>>1)*(buffer->x-1))) + buffer->y;
+    u32 linearIndex = (buffer->x * (Number_of_Textures_1D - 1)) -
+                      ((buffer->x & 1) ? (((buffer->x - 1) >> 1) * buffer->x) : ((buffer->x >> 1) * (buffer->x - 1))) + buffer->y;
 
     file_atlas_entry *entry = File_Atlas + linearIndex;
     u32 nBytes = entry->nBytes;
@@ -4663,8 +4614,7 @@ LoadTexture(void *in)
     FenceIn(Current_Loaded_Texture = buffer);
 }
 
-global_function
-void
+global_function void
 PopulateTextureLoadQueue(void *in)
 {
     u32 *packedTextureIndexes = (u32 *)in;
@@ -4679,8 +4629,7 @@ PopulateTextureLoadQueue(void *in)
     }
 }
 
-global_function
-void
+global_function void
 PrintShaderInfoLog(GLuint shader)
 {
     s32 infoLogLen = 0;
@@ -4699,8 +4648,8 @@ PrintShaderInfoLog(GLuint shader)
 }
 
 global_function
-GLuint
-CreateShader(const GLchar *fragmentShaderSource, const GLchar *vertexShaderSource, const GLchar *geometryShaderSource = 0)
+    GLuint
+    CreateShader(const GLchar *fragmentShaderSource, const GLchar *vertexShaderSource, const GLchar *geometryShaderSource = 0)
 {
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -4708,7 +4657,8 @@ CreateShader(const GLchar *fragmentShaderSource, const GLchar *vertexShaderSourc
 
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    if (geometryShader) glShaderSource(geometryShader, 1, &geometryShaderSource, NULL);
+    if (geometryShader)
+        glShaderSource(geometryShader, 1, &geometryShaderSource, NULL);
 
     GLint compiled;
 
@@ -4752,16 +4702,17 @@ CreateShader(const GLchar *fragmentShaderSource, const GLchar *vertexShaderSourc
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
-    if (geometryShader) glAttachShader(shaderProgram, geometryShader);
+    if (geometryShader)
+        glAttachShader(shaderProgram, geometryShader);
     glLinkProgram(shaderProgram);
 
     GLint isLinked;
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &isLinked);
-    if(isLinked == GL_FALSE)
+    if (isLinked == GL_FALSE)
     {
         GLint maxLength;
         glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
-        if(maxLength > 0)
+        if (maxLength > 0)
         {
             char *pLinkInfoLog = PushArray(Working_Set, char, (u32)maxLength);
             glGetProgramInfoLog(shaderProgram, maxLength, &maxLength, pLinkInfoLog);
@@ -4771,19 +4722,20 @@ CreateShader(const GLchar *fragmentShaderSource, const GLchar *vertexShaderSourc
 
         glDetachShader(shaderProgram, vertexShader);
         glDetachShader(shaderProgram, fragmentShader);
-        if (geometryShader) glDetachShader(shaderProgram, geometryShader);
+        if (geometryShader)
+            glDetachShader(shaderProgram, geometryShader);
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
-        if (geometryShader) glDeleteShader(geometryShader);
+        if (geometryShader)
+            glDeleteShader(geometryShader);
         glDeleteProgram(shaderProgram);
         exit(1);
     }
 
-    return(shaderProgram);
+    return (shaderProgram);
 }
 
-global_function
-void
+global_function void
 AdjustColorMap(s32 dir)
 {
     f32 unit = 0.05f;
@@ -4792,47 +4744,83 @@ AdjustColorMap(s32 dir)
     Color_Maps->controlPoints[1] = Max(Min(Color_Maps->controlPoints[1] + delta, Color_Maps->controlPoints[2]), Color_Maps->controlPoints[0]);
 
     glUseProgram(Contact_Matrix->shaderProgram);
-    glUniform3fv( Color_Maps->cpLocation, 1, Color_Maps->controlPoints);
+    glUniform3fv(Color_Maps->cpLocation, 1, Color_Maps->controlPoints);
 }
 
-global_function
-void
+global_function void
 NextColorMap(s32 dir)
 {
     glActiveTexture(GL_TEXTURE1);
-    
-    Color_Maps->currMap = dir > 0 ? (Color_Maps->currMap == (Color_Maps->nMaps - 1) ? 0 : Color_Maps->currMap + 1) : (Color_Maps->currMap == 0 ? Color_Maps->nMaps - 1 : Color_Maps->currMap - 1);
-    
+
+    if (useCustomOrder)
+    {
+        // Find the current index in the custom order
+        u32 currentIndex = 0;
+        for (u32 i = 0; i < userColourMapOrder.nMaps; i++)
+        {
+            if (userColourMapOrder.order[i] == Color_Maps->currMap)
+            {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        // Calculate the next index in the custom order
+        u32 nextIndex = dir > 0 ? (currentIndex == (userColourMapOrder.nMaps - 1) ? 0 : currentIndex + 1) : (currentIndex == 0 ? userColourMapOrder.nMaps - 1 : currentIndex - 1);
+
+        Color_Maps->currMap = userColourMapOrder.order[nextIndex];
+    }
+    else
+    {
+        Color_Maps->currMap = dir > 0 ? (Color_Maps->currMap == (Color_Maps->nMaps - 1) ? 0 : Color_Maps->currMap + 1) : (Color_Maps->currMap == 0 ? Color_Maps->nMaps - 1 : Color_Maps->currMap - 1);
+    }
+
     glBindTexture(GL_TEXTURE_BUFFER, Color_Maps->maps[Color_Maps->currMap]);
-    
     glActiveTexture(GL_TEXTURE0);
 }
 
-global_variable
-GLuint
-Quad_EBO;
+global_function
+    u32
+    GetOrderedColorMapIndex(u32 displayIndex)
+{
+    if (displayIndex < userColourMapOrder.nMaps)
+    {
+        return userColourMapOrder.order[displayIndex];
+    }
+    return displayIndex;
+}
 
-enum
-load_file_result
+global_function void
+InitializeColorMapOrder()
+{
+    userColourMapOrder.nMaps = Color_Maps->nMaps;
+    for (u32 i = 0; i < userColourMapOrder.nMaps; i++)
+    {
+        userColourMapOrder.order[i] = i;
+    }
+}
+
+global_variable
+    GLuint
+        Quad_EBO;
+
+enum load_file_result
 {
     ok,
     fileErr,
     decompErr,
 };
 
-global_variable
-libdeflate_decompressor *
-Decompressor;
+global_variable libdeflate_decompressor *
+    Decompressor;
+
+global_variable libdeflate_compressor *
+    Compressor;
 
 global_variable
-libdeflate_compressor *
-Compressor;
+    u08 Magic[] = {'p', 's', 't', 'm'};
 
-global_variable
-u08 Magic[] = {'p', 's', 't', 'm'};
-
-global_function
-FILE *
+global_function FILE *
 TestFile(const char *fileName, u64 *fileSize = 0)
 {
     FILE *file;
@@ -4876,30 +4864,29 @@ TestFile(const char *fileName, u64 *fileSize = 0)
             }
         }
     }
-    return(file);
+    return (file);
 }
 
 global_function
-u08
-LoadState(u64 headerHash, char *path = 0);
-
+    u08
+    LoadState(u64 headerHash, char *path = 0);
 
 global_function
-load_file_result
-LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *headerHash)
+    load_file_result
+    LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *headerHash)
 {
     u64 fileSize = 0;
 
     FILE *file = TestFile(filePath, &fileSize);
     if (!file)
     {
-        return(fileErr);
+        return (fileErr);
     }
-    
+
     FenceIn(File_Loaded = 0);
 
     static u32 reload = 0;
-    
+
     if (!reload)
     {
         reload = 1;
@@ -4936,28 +4923,28 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
         {
             switch (node->type)
             {
-                case extension_graph:
-                    {
-                        graph *gph = (graph *)node->extension;
-                        glDeleteVertexArrays(1, &gph->vao);
-                        glDeleteBuffers(1, &gph->vbo);
-                        glDeleteBuffers(1, &gph->shader->yValuesBuffer);
-                        glDeleteTextures(1, &gph->shader->yValuesBufferTex);
-                    }
-                    break;
+            case extension_graph:
+            {
+                graph *gph = (graph *)node->extension;
+                glDeleteVertexArrays(1, &gph->vao);
+                glDeleteBuffers(1, &gph->vbo);
+                glDeleteBuffers(1, &gph->shader->yValuesBuffer);
+                glDeleteTextures(1, &gph->shader->yValuesBufferTex);
+            }
+            break;
             }
         }
 
         Current_Loaded_Texture = 0;
         Texture_Ptr = 0;
-        
+
         Mouse_Move.x = -1.0;
         Mouse_Move.y = -1.0;
 
         Camera_Position.x = 0.0f;
         Camera_Position.y = 0.0f;
         Camera_Position.z = 1.0f;
-       
+
         Edit_Pixels.editing = 0;
         Global_Mode = mode_normal;
 
@@ -4975,8 +4962,12 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
         char sep = '/';
 #endif
 
-        while (*++tmp) {}
-        while ((*--tmp != sep) && *tmp) {}
+        while (*++tmp)
+        {
+        }
+        while ((*--tmp != sep) && *tmp)
+        {
+        }
 
         *fileName = tmp + 1;
 
@@ -4995,7 +4986,7 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
         *headerHash = FastHash64(compressionBuffer, nBytesHeaderComp, FastHash64(intBuff, sizeof(intBuff), 0xbafd06832de619c2));
         if (libdeflate_deflate_decompress(Decompressor, (const void *)compressionBuffer, nBytesHeaderComp, (void *)header, nBytesHeader, NULL))
         {
-            return(decompErr);
+            return (decompErr);
         }
         FreeLastPushP(arena); // comp buffer
 
@@ -5069,7 +5060,7 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
         {
             total += contigFracs[index];
             u32 pixel = (u32)((f64)Number_of_Pixels_1D * (f64)total);
-            
+
             relCoord = 0;
 #ifdef RevCoords
             u32 tmp = pixel - lastPixel - 1;
@@ -5077,7 +5068,7 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
             while (lastPixel < pixel)
             {
                 Map_State->originalContigIds[lastPixel] = index;
-                Map_State->contigRelCoords[lastPixel++] = 
+                Map_State->contigRelCoords[lastPixel++] =
 #ifdef RevCoords
                     tmp - relCoord++;
 #else
@@ -5151,44 +5142,44 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
                             u32 extensionSize = 0;
                             switch (type)
                             {
-                                case extension_graph:
-                                    {
-                                        u32 compSize;
-                                        fread(&compSize, 1, sizeof(u32), file);
-                                        graph *gph = PushStructP(arena, graph);
-                                        extension_node *node = PushStructP(arena, extension_node);
-                                        u08 *dataPlusName = PushArrayP(arena, u08, ((sizeof(u32) * Number_of_Pixels_1D) + sizeof(gph->name) ));
+                            case extension_graph:
+                            {
+                                u32 compSize;
+                                fread(&compSize, 1, sizeof(u32), file);
+                                graph *gph = PushStructP(arena, graph);
+                                extension_node *node = PushStructP(arena, extension_node);
+                                u08 *dataPlusName = PushArrayP(arena, u08, ((sizeof(u32) * Number_of_Pixels_1D) + sizeof(gph->name)));
 #pragma clang diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
-                                        gph->data = (u32 *)(dataPlusName + sizeof(gph->name));
-#pragma clang diagnostic pop                                       
-                                        extensionSize += (compSize + sizeof(u32));
-                                        u08 *compBuffer = PushArrayP(arena, u08, compSize);
-                                        fread(compBuffer, 1, compSize, file);
-                                        if (libdeflate_deflate_decompress(Decompressor, (const void *)compBuffer, compSize, (void *)dataPlusName, (sizeof(u32) * Number_of_Pixels_1D) + sizeof(gph->name), NULL))
-                                        {
-                                            FreeLastPushP(arena); // data
-                                            FreeLastPushP(arena); // graph
-                                            FreeLastPushP(arena); // node
-                                        }
-                                        else
-                                        {
-#pragma clang diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
-                                            u32 *namePtr = (u32 *)dataPlusName;
+                                gph->data = (u32 *)(dataPlusName + sizeof(gph->name));
 #pragma clang diagnostic pop
-                                            ForLoop2(ArrayCount(gph->name))
-                                            {
-                                                gph->name[index2] = *(namePtr + index2);
-                                            }
-
-                                            node->type = type;
-                                            node->extension = gph;
-                                            AddExtension(node);
-                                        }
-                                        FreeLastPushP(arena); // compBuffer
+                                extensionSize += (compSize + sizeof(u32));
+                                u08 *compBuffer = PushArrayP(arena, u08, compSize);
+                                fread(compBuffer, 1, compSize, file);
+                                if (libdeflate_deflate_decompress(Decompressor, (const void *)compBuffer, compSize, (void *)dataPlusName, (sizeof(u32) * Number_of_Pixels_1D) + sizeof(gph->name), NULL))
+                                {
+                                    FreeLastPushP(arena); // data
+                                    FreeLastPushP(arena); // graph
+                                    FreeLastPushP(arena); // node
+                                }
+                                else
+                                {
+#pragma clang diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+                                    u32 *namePtr = (u32 *)dataPlusName;
+#pragma clang diagnostic pop
+                                    ForLoop2(ArrayCount(gph->name))
+                                    {
+                                        gph->name[index2] = *(namePtr + index2);
                                     }
-                                    break;
+
+                                    node->type = type;
+                                    node->extension = gph;
+                                    AddExtension(node);
+                                }
+                                FreeLastPushP(arena); // compBuffer
+                            }
+                            break;
                             }
                             currLocation += extensionSize;
                         }
@@ -5200,7 +5191,7 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
                 }
             }
         }
-        
+
         fclose(file);
     }
 
@@ -5225,8 +5216,8 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
         u32 resolution = Texture_Resolution;
         ForLoop(Number_of_MipMaps)
         {
-            glCompressedTexImage3D  (GL_TEXTURE_2D_ARRAY, (GLint)index, GL_COMPRESSED_RED_RGTC1, (GLsizei)resolution, (GLsizei)resolution, 
-                                    (GLsizei)nTextures, 0, (GLsizei)((resolution >> 1) * resolution * nTextures), 0);
+            glCompressedTexImage3D(GL_TEXTURE_2D_ARRAY, (GLint)index, GL_COMPRESSED_RED_RGTC1, (GLsizei)resolution, (GLsizei)resolution,
+                                   (GLsizei)nTextures, 0, (GLsizei)((resolution >> 1) * resolution * nTextures), 0);
             resolution >>= 1;
         }
         u32 ptr = 0;
@@ -5244,14 +5235,14 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
                 u08 *texture = loadedTexture->texture;
 
                 resolution = Texture_Resolution;
-                for (   GLint level = 0;
-                        level < (GLint)Number_of_MipMaps;
-                        ++level )
+                for (GLint level = 0;
+                     level < (GLint)Number_of_MipMaps;
+                     ++level)
                 {
                     GLsizei nBytes = (GLsizei)(resolution * (resolution >> 1));
-                    
-                    glCompressedTexSubImage3D(  GL_TEXTURE_2D_ARRAY, level, 0, 0, (GLint)ptr, (GLsizei)resolution, (GLsizei)resolution, 1,
-                                                GL_COMPRESSED_RED_RGTC1, nBytes, texture);
+
+                    glCompressedTexSubImage3D(GL_TEXTURE_2D_ARRAY, level, 0, 0, (GLint)ptr, (GLsizei)resolution, (GLsizei)resolution, 1,
+                                              GL_COMPRESSED_RED_RGTC1, nBytes, texture);
 
                     resolution >>= 1;
                     texture += nBytes;
@@ -5299,14 +5290,13 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
 
                 f32 allCornerCoords[2][2] = {{0.0f, 1.0f}, {1.0f, 0.0f}};
                 f32 *cornerCoords = allCornerCoords[index2 >= index ? 0 : 1];
-                
+
                 u32 min = Min(index, index2);
                 u32 max = Max(index, index2);
-                
+
                 f32 u = (f32)((min * (Number_of_Textures_1D - 1)) -
-                    ((min & 1) ? (((min-1)>>1) * min) : 
-                     ((min>>1)*(min-1))) + max);
-                
+                              ((min & 1) ? (((min - 1) >> 1) * min) : ((min >> 1) * (min - 1))) + max);
+
                 textureVertices[0].x = x - 0.5f;
                 textureVertices[0].y = y - quadSize - 0.5f;
                 textureVertices[0].u = u;
@@ -5354,7 +5344,7 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
     // Texture Pixel Lookups
     {
         GLuint pixStart, pixStartTex, pixRearrage, pixRearrageTex;
-       
+
         u32 nTex = (Number_of_Textures_1D + 1) * (Number_of_Textures_1D >> 1);
         u32 nPix1D = Number_of_Textures_1D * Texture_Resolution;
 
@@ -5414,7 +5404,7 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
 
     GLuint posAttribFlatShader = (GLuint)glGetAttribLocation(Flat_Shader->shaderProgram, "position");
     u32 pad = 0;
-    auto PushGenericBuffer = [posAttribFlatShader, pad, arena] (quad_data **quadData, u32 numberOfBuffers)
+    auto PushGenericBuffer = [posAttribFlatShader, pad, arena](quad_data **quadData, u32 numberOfBuffers)
     {
         (void)pad;
 
@@ -5452,17 +5442,17 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
         PushGenericBuffer(&Label_Box_Data, 2 * Max_Number_of_Contigs);
     }
 
-    //Scale Bar Data
+    // Scale Bar Data
     {
         PushGenericBuffer(&Scale_Bar_Data, 4 * (2 + MaxTicksPerScaleBar));
     }
 
-    //Contig Colour Bars
+    // Contig Colour Bars
     {
         PushGenericBuffer(&Contig_ColourBar_Data, Max_Number_of_Contigs);
     }
 
-    //Scaff Bars
+    // Scaff Bars
     {
         PushGenericBuffer(&Scaff_Bar_Data, Max_Number_of_Contigs);
     }
@@ -5474,80 +5464,80 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
         {
             switch (node->type)
             {
-                case extension_graph:
-                    {
-                        graph *gph = (graph *)node->extension;
+            case extension_graph:
+            {
+                graph *gph = (graph *)node->extension;
 #define DefaultGraphScale 0.2f
 #define DefaultGraphBase 32.0f
 #define DefaultGraphLineSize 1.0f
-// #define DefaultGraphColour {1.0f, 0.341f, 0.2f, 1.0f}
-                        gph->scale = DefaultGraphScale;
-                        gph->base = DefaultGraphBase;
-                        gph->lineSize = DefaultGraphLineSize;
-                        gph->colour = graphColors[0];
-                        gph->on = 0;
+                // #define DefaultGraphColour {1.0f, 0.341f, 0.2f, 1.0f}
+                gph->scale = DefaultGraphScale;
+                gph->base = DefaultGraphBase;
+                gph->lineSize = DefaultGraphLineSize;
+                gph->colour = graphColors[0];
+                gph->on = 0;
 
-                        gph->shader = PushStructP(arena, editable_plot_shader);
-                        gph->shader->shaderProgram = CreateShader(FragmentSource_EditablePlot, VertexSource_EditablePlot, GeometrySource_EditablePlot);
+                gph->shader = PushStructP(arena, editable_plot_shader);
+                gph->shader->shaderProgram = CreateShader(FragmentSource_EditablePlot, VertexSource_EditablePlot, GeometrySource_EditablePlot);
 
-                        glUseProgram(gph->shader->shaderProgram);
-                        glBindFragDataLocation(gph->shader->shaderProgram, 0, "outColor");
-                        gph->shader->matLocation = glGetUniformLocation(gph->shader->shaderProgram, "matrix");
-                        gph->shader->colorLocation = glGetUniformLocation(gph->shader->shaderProgram, "color");
-                        gph->shader->yScaleLocation = glGetUniformLocation(gph->shader->shaderProgram, "yscale");
-                        gph->shader->yTopLocation = glGetUniformLocation(gph->shader->shaderProgram, "ytop");
-                        gph->shader->lineSizeLocation = glGetUniformLocation(gph->shader->shaderProgram, "linewidth");
+                glUseProgram(gph->shader->shaderProgram);
+                glBindFragDataLocation(gph->shader->shaderProgram, 0, "outColor");
+                gph->shader->matLocation = glGetUniformLocation(gph->shader->shaderProgram, "matrix");
+                gph->shader->colorLocation = glGetUniformLocation(gph->shader->shaderProgram, "color");
+                gph->shader->yScaleLocation = glGetUniformLocation(gph->shader->shaderProgram, "yscale");
+                gph->shader->yTopLocation = glGetUniformLocation(gph->shader->shaderProgram, "ytop");
+                gph->shader->lineSizeLocation = glGetUniformLocation(gph->shader->shaderProgram, "linewidth");
 
-                        glUniform1i(glGetUniformLocation(gph->shader->shaderProgram, "pixrearrangelookup"), 3);
-                        glUniform1i(glGetUniformLocation(gph->shader->shaderProgram, "yvalues"), 4 + (s32)exIndex);
+                glUniform1i(glGetUniformLocation(gph->shader->shaderProgram, "pixrearrangelookup"), 3);
+                glUniform1i(glGetUniformLocation(gph->shader->shaderProgram, "yvalues"), 4 + (s32)exIndex);
 
-                        u32 nValues = Number_of_Pixels_1D;
-                        f32 *xValues = PushArrayP(arena, f32, nValues);
-                        f32 *yValues = PushArrayP(arena, f32, nValues);
-                        
-                        u32 max = 0;
-                        ForLoop(Number_of_Pixels_1D)
-                        {
-                            max = Max(max, gph->data[index]);
-                        }
+                u32 nValues = Number_of_Pixels_1D;
+                f32 *xValues = PushArrayP(arena, f32, nValues);
+                f32 *yValues = PushArrayP(arena, f32, nValues);
 
-                        ForLoop(Number_of_Pixels_1D)
-                        {
-                            xValues[index] = (f32)index;
-                            yValues[index] = (f32)gph->data[index] / (f32)max;
-                        }
+                u32 max = 0;
+                ForLoop(Number_of_Pixels_1D)
+                {
+                    max = Max(max, gph->data[index]);
+                }
 
-                        glActiveTexture(GL_TEXTURE4 + exIndex++);
+                ForLoop(Number_of_Pixels_1D)
+                {
+                    xValues[index] = (f32)index;
+                    yValues[index] = (f32)gph->data[index] / (f32)max;
+                }
 
-                        GLuint yVal, yValTex;
+                glActiveTexture(GL_TEXTURE4 + exIndex++);
 
-                        glGenBuffers(1, &yVal);
-                        glBindBuffer(GL_TEXTURE_BUFFER, yVal);
-                        glBufferData(GL_TEXTURE_BUFFER, sizeof(f32) * nValues, yValues, GL_STATIC_DRAW);
+                GLuint yVal, yValTex;
 
-                        glGenTextures(1, &yValTex);
-                        glBindTexture(GL_TEXTURE_BUFFER, yValTex);
-                        glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, yVal);
+                glGenBuffers(1, &yVal);
+                glBindBuffer(GL_TEXTURE_BUFFER, yVal);
+                glBufferData(GL_TEXTURE_BUFFER, sizeof(f32) * nValues, yValues, GL_STATIC_DRAW);
 
-                        gph->shader->yValuesBuffer = yVal;
-                        gph->shader->yValuesBufferTex = yValTex;
-                        
-                        glGenVertexArrays(1, &gph->vao);
-                        glBindVertexArray(gph->vao);
-                        glGenBuffers(1, &gph->vbo);
-                        glBindBuffer(GL_ARRAY_BUFFER, gph->vbo);
-                        glBufferData(GL_ARRAY_BUFFER, sizeof(f32) * nValues, xValues, GL_STATIC_DRAW);
+                glGenTextures(1, &yValTex);
+                glBindTexture(GL_TEXTURE_BUFFER, yValTex);
+                glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, yVal);
 
-                        GLuint posAttrib = (GLuint)glGetAttribLocation(gph->shader->shaderProgram, "position");
-                        glEnableVertexAttribArray(posAttrib);
-                        glVertexAttribPointer(posAttrib, 1, GL_FLOAT, GL_FALSE, 0, 0);
+                gph->shader->yValuesBuffer = yVal;
+                gph->shader->yValuesBufferTex = yValTex;
 
-                        FreeLastPushP(arena); // y
-                        FreeLastPushP(arena); // x
+                glGenVertexArrays(1, &gph->vao);
+                glBindVertexArray(gph->vao);
+                glGenBuffers(1, &gph->vbo);
+                glBindBuffer(GL_ARRAY_BUFFER, gph->vbo);
+                glBufferData(GL_ARRAY_BUFFER, sizeof(f32) * nValues, xValues, GL_STATIC_DRAW);
 
-                        glActiveTexture(GL_TEXTURE0);
-                    }
-                    break;
+                GLuint posAttrib = (GLuint)glGetAttribLocation(gph->shader->shaderProgram, "position");
+                glEnableVertexAttribArray(posAttrib);
+                glVertexAttribPointer(posAttrib, 1, GL_FLOAT, GL_FALSE, 0, 0);
+
+                FreeLastPushP(arena); // y
+                FreeLastPushP(arena); // x
+
+                glActiveTexture(GL_TEXTURE0);
+            }
+            break;
             }
         }
     }
@@ -5558,7 +5548,7 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
         PushGenericBuffer(&QuadTree_Data, 1 << (2 * (Waypoints_Quadtree_Levels + 1)));
     }
 #endif
-    
+
     // Map Editor
     {
         Map_Editor = PushStructP(arena, map_editor);
@@ -5598,18 +5588,17 @@ LoadFile(const char *filePath, memory_arena *arena, char **fileName, u64 *header
 
     FenceIn(File_Loaded = 1);
 
-    if (LoadState(*headerHash)) LoadState(*headerHash + 1);
+    if (LoadState(*headerHash))
+        LoadState(*headerHash + 1);
     UserLoadState("userprofile", 0);
 
-    return(ok);
+    return (ok);
 }
 
-global_variable
-memory_arena *
-Loading_Arena;
+global_variable memory_arena *
+    Loading_Arena;
 
-global_function
-void
+global_function void
 SetTheme(struct nk_context *ctx, enum theme theme)
 {
     struct nk_color table[NK_COLOR_COUNT];
@@ -5617,188 +5606,187 @@ SetTheme(struct nk_context *ctx, enum theme theme)
 
     switch (theme)
     {
-        case THEME_WHITE:
-            {
-                table[NK_COLOR_TEXT] = nk_rgba(70, 70, 70, 255);
-                table[NK_COLOR_WINDOW] = nk_rgba(175, 175, 175, 255);
-                table[NK_COLOR_HEADER] = nk_rgba(175, 175, 175, 255);
-                table[NK_COLOR_BORDER] = nk_rgba(0, 0, 0, 255);
-                table[NK_COLOR_BUTTON] = nk_rgba(185, 185, 185, 255);
-                table[NK_COLOR_BUTTON_HOVER] = nk_rgba(170, 170, 170, 255);
-                table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(160, 160, 160, 255);
-                table[NK_COLOR_TOGGLE] = nk_rgba(150, 150, 150, 255);
-                table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(120, 120, 120, 255);
-                table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(175, 175, 175, 255);
-                table[NK_COLOR_SELECT] = nk_rgba(190, 190, 190, 255);
-                table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(175, 175, 175, 255);
-                table[NK_COLOR_SLIDER] = nk_rgba(190, 190, 190, 255);
-                table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(80, 80, 80, 255);
-                table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(70, 70, 70, 255);
-                table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(60, 60, 60, 255);
-                table[NK_COLOR_PROPERTY] = nk_rgba(175, 175, 175, 255);
-                table[NK_COLOR_EDIT] = nk_rgba(150, 150, 150, 255);
-                table[NK_COLOR_EDIT_CURSOR] = nk_rgba(0, 0, 0, 255);
-                table[NK_COLOR_COMBO] = nk_rgba(175, 175, 175, 255);
-                table[NK_COLOR_CHART] = nk_rgba(160, 160, 160, 255);
-                table[NK_COLOR_CHART_COLOR] = nk_rgba(45, 45, 45, 255);
-                table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba( 255, 0, 0, 255);
-                table[NK_COLOR_SCROLLBAR] = nk_rgba(180, 180, 180, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(140, 140, 140, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(150, 150, 150, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(160, 160, 160, 255);
-                table[NK_COLOR_TAB_HEADER] = nk_rgba(180, 180, 180, 255);
-            }
-            break;
+    case THEME_WHITE:
+    {
+        table[NK_COLOR_TEXT] = nk_rgba(70, 70, 70, 255);
+        table[NK_COLOR_WINDOW] = nk_rgba(175, 175, 175, 255);
+        table[NK_COLOR_HEADER] = nk_rgba(175, 175, 175, 255);
+        table[NK_COLOR_BORDER] = nk_rgba(0, 0, 0, 255);
+        table[NK_COLOR_BUTTON] = nk_rgba(185, 185, 185, 255);
+        table[NK_COLOR_BUTTON_HOVER] = nk_rgba(170, 170, 170, 255);
+        table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(160, 160, 160, 255);
+        table[NK_COLOR_TOGGLE] = nk_rgba(150, 150, 150, 255);
+        table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(120, 120, 120, 255);
+        table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(175, 175, 175, 255);
+        table[NK_COLOR_SELECT] = nk_rgba(190, 190, 190, 255);
+        table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(175, 175, 175, 255);
+        table[NK_COLOR_SLIDER] = nk_rgba(190, 190, 190, 255);
+        table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(80, 80, 80, 255);
+        table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(70, 70, 70, 255);
+        table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(60, 60, 60, 255);
+        table[NK_COLOR_PROPERTY] = nk_rgba(175, 175, 175, 255);
+        table[NK_COLOR_EDIT] = nk_rgba(150, 150, 150, 255);
+        table[NK_COLOR_EDIT_CURSOR] = nk_rgba(0, 0, 0, 255);
+        table[NK_COLOR_COMBO] = nk_rgba(175, 175, 175, 255);
+        table[NK_COLOR_CHART] = nk_rgba(160, 160, 160, 255);
+        table[NK_COLOR_CHART_COLOR] = nk_rgba(45, 45, 45, 255);
+        table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba(255, 0, 0, 255);
+        table[NK_COLOR_SCROLLBAR] = nk_rgba(180, 180, 180, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(140, 140, 140, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(150, 150, 150, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(160, 160, 160, 255);
+        table[NK_COLOR_TAB_HEADER] = nk_rgba(180, 180, 180, 255);
+    }
+    break;
 
-        case THEME_RED:
-            {
-                table[NK_COLOR_TEXT] = nk_rgba(190, 190, 190, 255);
-                table[NK_COLOR_WINDOW] = nk_rgba(30, 33, 40, 215);
-                table[NK_COLOR_HEADER] = nk_rgba(181, 45, 69, 220);
-                table[NK_COLOR_BORDER] = nk_rgba(51, 55, 67, 255);
-                table[NK_COLOR_BUTTON] = nk_rgba(181, 45, 69, 255);
-                table[NK_COLOR_BUTTON_HOVER] = nk_rgba(190, 50, 70, 255);
-                table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(195, 55, 75, 255);
-                table[NK_COLOR_TOGGLE] = nk_rgba(51, 55, 67, 255);
-                table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(45, 60, 60, 255);
-                table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(181, 45, 69, 255);
-                table[NK_COLOR_SELECT] = nk_rgba(51, 55, 67, 255);
-                table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(181, 45, 69, 255);
-                table[NK_COLOR_SLIDER] = nk_rgba(51, 55, 67, 255);
-                table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(181, 45, 69, 255);
-                table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(186, 50, 74, 255);
-                table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(191, 55, 79, 255);
-                table[NK_COLOR_PROPERTY] = nk_rgba(51, 55, 67, 255);
-                table[NK_COLOR_EDIT] = nk_rgba(51, 55, 67, 225);
-                table[NK_COLOR_EDIT_CURSOR] = nk_rgba(190, 190, 190, 255);
-                table[NK_COLOR_COMBO] = nk_rgba(51, 55, 67, 255);
-                table[NK_COLOR_CHART] = nk_rgba(51, 55, 67, 255);
-                table[NK_COLOR_CHART_COLOR] = nk_rgba(170, 40, 60, 255);
-                table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba( 255, 0, 0, 255);
-                table[NK_COLOR_SCROLLBAR] = nk_rgba(30, 33, 40, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(64, 84, 95, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(70, 90, 100, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(75, 95, 105, 255);
-                table[NK_COLOR_TAB_HEADER] = nk_rgba(181, 45, 69, 220);
-            }
-            break;
+    case THEME_RED:
+    {
+        table[NK_COLOR_TEXT] = nk_rgba(190, 190, 190, 255);
+        table[NK_COLOR_WINDOW] = nk_rgba(30, 33, 40, 215);
+        table[NK_COLOR_HEADER] = nk_rgba(181, 45, 69, 220);
+        table[NK_COLOR_BORDER] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_BUTTON] = nk_rgba(181, 45, 69, 255);
+        table[NK_COLOR_BUTTON_HOVER] = nk_rgba(190, 50, 70, 255);
+        table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(195, 55, 75, 255);
+        table[NK_COLOR_TOGGLE] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(45, 60, 60, 255);
+        table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(181, 45, 69, 255);
+        table[NK_COLOR_SELECT] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(181, 45, 69, 255);
+        table[NK_COLOR_SLIDER] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(181, 45, 69, 255);
+        table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(186, 50, 74, 255);
+        table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(191, 55, 79, 255);
+        table[NK_COLOR_PROPERTY] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_EDIT] = nk_rgba(51, 55, 67, 225);
+        table[NK_COLOR_EDIT_CURSOR] = nk_rgba(190, 190, 190, 255);
+        table[NK_COLOR_COMBO] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_CHART] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_CHART_COLOR] = nk_rgba(170, 40, 60, 255);
+        table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba(255, 0, 0, 255);
+        table[NK_COLOR_SCROLLBAR] = nk_rgba(30, 33, 40, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(64, 84, 95, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(70, 90, 100, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(75, 95, 105, 255);
+        table[NK_COLOR_TAB_HEADER] = nk_rgba(181, 45, 69, 220);
+    }
+    break;
 
-        case THEME_BLUE:
-            {
-                table[NK_COLOR_TEXT] = nk_rgba(20, 20, 20, 255);
-                table[NK_COLOR_WINDOW] = nk_rgba(202, 212, 214, 215);
-                table[NK_COLOR_HEADER] = nk_rgba(137, 182, 224, 220);
-                table[NK_COLOR_BORDER] = nk_rgba(140, 159, 173, 255);
-                table[NK_COLOR_BUTTON] = nk_rgba(137, 182, 224, 255);
-                table[NK_COLOR_BUTTON_HOVER] = nk_rgba(142, 187, 229, 255);
-                table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(147, 192, 234, 255);
-                table[NK_COLOR_TOGGLE] = nk_rgba(177, 210, 210, 255);
-                table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(182, 215, 215, 255);
-                table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(137, 182, 224, 255);
-                table[NK_COLOR_SELECT] = nk_rgba(177, 210, 210, 255);
-                table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(137, 182, 224, 255);
-                table[NK_COLOR_SLIDER] = nk_rgba(177, 210, 210, 255);
-                table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(137, 182, 224, 245);
-                table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(142, 188, 229, 255);
-                table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(147, 193, 234, 255);
-                table[NK_COLOR_PROPERTY] = nk_rgba(210, 210, 210, 255);
-                table[NK_COLOR_EDIT] = nk_rgba(210, 210, 210, 225);
-                table[NK_COLOR_EDIT_CURSOR] = nk_rgba(20, 20, 20, 255);
-                table[NK_COLOR_COMBO] = nk_rgba(210, 210, 210, 255);
-                table[NK_COLOR_CHART] = nk_rgba(210, 210, 210, 255);
-                table[NK_COLOR_CHART_COLOR] = nk_rgba(137, 182, 224, 255);
-                table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba( 255, 0, 0, 255);
-                table[NK_COLOR_SCROLLBAR] = nk_rgba(190, 200, 200, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(64, 84, 95, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(70, 90, 100, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(75, 95, 105, 255);
-                table[NK_COLOR_TAB_HEADER] = nk_rgba(156, 193, 220, 255);
-            }
-            break;
+    case THEME_BLUE:
+    {
+        table[NK_COLOR_TEXT] = nk_rgba(20, 20, 20, 255);
+        table[NK_COLOR_WINDOW] = nk_rgba(202, 212, 214, 215);
+        table[NK_COLOR_HEADER] = nk_rgba(137, 182, 224, 220);
+        table[NK_COLOR_BORDER] = nk_rgba(140, 159, 173, 255);
+        table[NK_COLOR_BUTTON] = nk_rgba(137, 182, 224, 255);
+        table[NK_COLOR_BUTTON_HOVER] = nk_rgba(142, 187, 229, 255);
+        table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(147, 192, 234, 255);
+        table[NK_COLOR_TOGGLE] = nk_rgba(177, 210, 210, 255);
+        table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(182, 215, 215, 255);
+        table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(137, 182, 224, 255);
+        table[NK_COLOR_SELECT] = nk_rgba(177, 210, 210, 255);
+        table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(137, 182, 224, 255);
+        table[NK_COLOR_SLIDER] = nk_rgba(177, 210, 210, 255);
+        table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(137, 182, 224, 245);
+        table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(142, 188, 229, 255);
+        table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(147, 193, 234, 255);
+        table[NK_COLOR_PROPERTY] = nk_rgba(210, 210, 210, 255);
+        table[NK_COLOR_EDIT] = nk_rgba(210, 210, 210, 225);
+        table[NK_COLOR_EDIT_CURSOR] = nk_rgba(20, 20, 20, 255);
+        table[NK_COLOR_COMBO] = nk_rgba(210, 210, 210, 255);
+        table[NK_COLOR_CHART] = nk_rgba(210, 210, 210, 255);
+        table[NK_COLOR_CHART_COLOR] = nk_rgba(137, 182, 224, 255);
+        table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba(255, 0, 0, 255);
+        table[NK_COLOR_SCROLLBAR] = nk_rgba(190, 200, 200, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(64, 84, 95, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(70, 90, 100, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(75, 95, 105, 255);
+        table[NK_COLOR_TAB_HEADER] = nk_rgba(156, 193, 220, 255);
+    }
+    break;
 
-        case THEME_DARK:
-            {
-                table[NK_COLOR_TEXT] = nk_rgba(210, 210, 210, 255);
-                table[NK_COLOR_WINDOW] = nk_rgba(57, 67, 71, 215);
-                table[NK_COLOR_HEADER] = nk_rgba(51, 51, 56, 220);
-                table[NK_COLOR_BORDER] = nk_rgba(46, 46, 46, 255);
-                table[NK_COLOR_BUTTON] = nk_rgba(48, 83, 111, 255);
-                table[NK_COLOR_BUTTON_HOVER] = nk_rgba(58, 93, 121, 255);
-                table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(63, 98, 126, 255);
-                table[NK_COLOR_TOGGLE] = nk_rgba(50, 58, 61, 255);
-                table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(45, 53, 56, 255);
-                table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(48, 83, 111, 255);
-                table[NK_COLOR_SELECT] = nk_rgba(57, 67, 61, 255);
-                table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(48, 83, 111, 255);
-                table[NK_COLOR_SLIDER] = nk_rgba(50, 58, 61, 255);
-                table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(48, 83, 111, 245);
-                table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(53, 88, 116, 255);
-                table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(58, 93, 121, 255);
-                table[NK_COLOR_PROPERTY] = nk_rgba(50, 58, 61, 255);
-                table[NK_COLOR_EDIT] = nk_rgba(50, 58, 61, 225);
-                table[NK_COLOR_EDIT_CURSOR] = nk_rgba(210, 210, 210, 255);
-                table[NK_COLOR_COMBO] = nk_rgba(50, 58, 61, 255);
-                table[NK_COLOR_CHART] = nk_rgba(50, 58, 61, 255);
-                table[NK_COLOR_CHART_COLOR] = nk_rgba(48, 83, 111, 255);
-                table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba(255, 0, 0, 255);
-                table[NK_COLOR_SCROLLBAR] = nk_rgba(50, 58, 61, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(48, 83, 111, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(53, 88, 116, 255);
-                table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(58, 93, 121, 255);
-                table[NK_COLOR_TAB_HEADER] = nk_rgba(48, 83, 111, 255);
-            }
-            break;
+    case THEME_DARK:
+    {
+        table[NK_COLOR_TEXT] = nk_rgba(210, 210, 210, 255);
+        table[NK_COLOR_WINDOW] = nk_rgba(57, 67, 71, 215);
+        table[NK_COLOR_HEADER] = nk_rgba(51, 51, 56, 220);
+        table[NK_COLOR_BORDER] = nk_rgba(46, 46, 46, 255);
+        table[NK_COLOR_BUTTON] = nk_rgba(48, 83, 111, 255);
+        table[NK_COLOR_BUTTON_HOVER] = nk_rgba(58, 93, 121, 255);
+        table[NK_COLOR_BUTTON_ACTIVE] = nk_rgba(63, 98, 126, 255);
+        table[NK_COLOR_TOGGLE] = nk_rgba(50, 58, 61, 255);
+        table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(45, 53, 56, 255);
+        table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(48, 83, 111, 255);
+        table[NK_COLOR_SELECT] = nk_rgba(57, 67, 61, 255);
+        table[NK_COLOR_SELECT_ACTIVE] = nk_rgba(48, 83, 111, 255);
+        table[NK_COLOR_SLIDER] = nk_rgba(50, 58, 61, 255);
+        table[NK_COLOR_SLIDER_CURSOR] = nk_rgba(48, 83, 111, 245);
+        table[NK_COLOR_SLIDER_CURSOR_HOVER] = nk_rgba(53, 88, 116, 255);
+        table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = nk_rgba(58, 93, 121, 255);
+        table[NK_COLOR_PROPERTY] = nk_rgba(50, 58, 61, 255);
+        table[NK_COLOR_EDIT] = nk_rgba(50, 58, 61, 225);
+        table[NK_COLOR_EDIT_CURSOR] = nk_rgba(210, 210, 210, 255);
+        table[NK_COLOR_COMBO] = nk_rgba(50, 58, 61, 255);
+        table[NK_COLOR_CHART] = nk_rgba(50, 58, 61, 255);
+        table[NK_COLOR_CHART_COLOR] = nk_rgba(48, 83, 111, 255);
+        table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = nk_rgba(255, 0, 0, 255);
+        table[NK_COLOR_SCROLLBAR] = nk_rgba(50, 58, 61, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(48, 83, 111, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(53, 88, 116, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(58, 93, 121, 255);
+        table[NK_COLOR_TAB_HEADER] = nk_rgba(48, 83, 111, 255);
+    }
+    break;
 
-        case THEME_BLACK:
-        case THEME_COUNT:
-            themeSet = 0;
+    case THEME_BLACK:
+    case THEME_COUNT:
+        themeSet = 0;
     }
 
-    if (themeSet) nk_style_from_table(ctx, table, Screen_Scale.x, Screen_Scale.y);
-    else nk_style_default(ctx, Screen_Scale.x, Screen_Scale.y);
+    if (themeSet)
+        nk_style_from_table(ctx, table, Screen_Scale.x, Screen_Scale.y);
+    else
+        nk_style_default(ctx, Screen_Scale.x, Screen_Scale.y);
 
     Theme_Colour = table[NK_COLOR_BUTTON_ACTIVE];
-    
+
     NK_Context->style.slider.show_buttons = nk_true;
 
     Current_Theme = theme;
 }
 
-global_variable
-const char *
-Default_Tags[] = 
-{
-    "Haplotig",
-    "Unloc",
-    "X",
-    "Y",
-    "Z",
-    "W",
-    "HAP1",
-    "HAP2",
-    "Target",
-    "Contaminant",
-    "X1",
-    "X2",
-    "Y1",
-    "Y2",
-    "Z1",
-    "Z2",
-    "W1",
-    "W2",
-    "I",
-    "II",
-    "III",
-    "IV",
-    "V",
-    "B1",
-    "B2",
-    "B3",
-    "U"
-};
+global_variable const char *
+    Default_Tags[] =
+        {
+            "Haplotig",
+            "Unloc",
+            "X",
+            "Y",
+            "Z",
+            "W",
+            "HAP1",
+            "HAP2",
+            "Target",
+            "Contaminant",
+            "X1",
+            "X2",
+            "Y1",
+            "Y2",
+            "Z1",
+            "Z2",
+            "W1",
+            "W2",
+            "I",
+            "II",
+            "III",
+            "IV",
+            "V",
+            "B1",
+            "B2",
+            "B3",
+            "U"};
 
-global_function
-void
+global_function void
 Setup()
 {
     Decompressor = libdeflate_alloc_decompressor();
@@ -5831,7 +5819,7 @@ Setup()
 #define DefaultNameLabelTextSize 32.0f
         Contig_Name_Labels->size = DefaultNameLabelTextSize;
     }
-    
+
     // Scale Bar UI
     {
         Scale_Bars = PushStruct(Working_Set, ui_colour_element_bg);
@@ -5841,7 +5829,7 @@ Setup()
 #define DefaultScaleBarSize 20.0f
         Scale_Bars->size = DefaultScaleBarSize;
     }
-   
+
     // Grid UI
     {
         Grid = PushStruct(Working_Set, ui_colour_element);
@@ -5905,7 +5893,7 @@ Setup()
         MetaData_Mode_Data->size = DefaultMetaDataSize;
     }
 
-    //Extension Mode Colours
+    // Extension Mode Colours
     {
         Extension_Mode_Data = PushStruct(Working_Set, meta_mode_data);
         Extension_Mode_Data->text = Yellow_Text_Float;
@@ -5966,12 +5954,12 @@ Setup()
 
             glActiveTexture(GL_TEXTURE0);
 
-            ForLoop2(256) //TODO SIMD
+            ForLoop2(256) // TODO SIMD
             {
-                mapPreviewImage[index2] =   ((u32)(Color_Map_Data[index][3 * index2] * 255.0f)) |
-                    (((u32)(Color_Map_Data[index][(3 * index2) + 1] * 255.0f)) << 8) |
-                    (((u32)(Color_Map_Data[index][(3 * index2) + 2] * 255.0f)) << 16) |
-                    0xff000000;
+                mapPreviewImage[index2] = ((u32)(Color_Map_Data[index][3 * index2] * 255.0f)) |
+                                          (((u32)(Color_Map_Data[index][(3 * index2) + 1] * 255.0f)) << 8) |
+                                          (((u32)(Color_Map_Data[index][(3 * index2) + 2] * 255.0f)) << 16) |
+                                          0xff000000;
             }
             glGenTextures(1, &texPreview);
             glBindTexture(GL_TEXTURE_2D, texPreview);
@@ -5994,7 +5982,7 @@ Setup()
         Color_Maps->controlPoints[0] = 0.0f;
         Color_Maps->controlPoints[1] = 0.5f;
         Color_Maps->controlPoints[2] = 1.0f;
-        glUniform3fv( Color_Maps->cpLocation, 1, Color_Maps->controlPoints);
+        glUniform3fv(Color_Maps->cpLocation, 1, Color_Maps->controlPoints);
     }
 
     // Flat Color Shader
@@ -6008,7 +5996,7 @@ Setup()
         Flat_Shader->matLocation = glGetUniformLocation(Flat_Shader->shaderProgram, "matrix");
         Flat_Shader->colorLocation = glGetUniformLocation(Flat_Shader->shaderProgram, "color");
     }
-    
+
     // Fonts
     {
         UI_Shader = PushStruct(Working_Set, ui_shader);
@@ -6050,7 +6038,7 @@ Setup()
     }
 
     GLuint posAttribFlatShader = (GLuint)glGetAttribLocation(Flat_Shader->shaderProgram, "position");
-    auto PushGenericBuffer = [posAttribFlatShader] (quad_data **quadData, u32 numberOfBuffers)
+    auto PushGenericBuffer = [posAttribFlatShader](quad_data **quadData, u32 numberOfBuffers)
     {
         *quadData = PushStruct(Working_Set, quad_data);
 
@@ -6121,9 +6109,9 @@ Setup()
         glEnableVertexAttribArray((GLuint)NK_Device->attrib_uv);
         glEnableVertexAttribArray((GLuint)NK_Device->attrib_col);
 
-        glVertexAttribPointer((GLuint)NK_Device->attrib_pos, 2, GL_FLOAT, GL_FALSE, vs, (void*)vp);
-        glVertexAttribPointer((GLuint)NK_Device->attrib_uv, 2, GL_FLOAT, GL_FALSE, vs, (void*)vt);
-        glVertexAttribPointer((GLuint)NK_Device->attrib_col, 4, GL_UNSIGNED_BYTE, GL_TRUE, vs, (void*)vc);
+        glVertexAttribPointer((GLuint)NK_Device->attrib_pos, 2, GL_FLOAT, GL_FALSE, vs, (void *)vp);
+        glVertexAttribPointer((GLuint)NK_Device->attrib_uv, 2, GL_FLOAT, GL_FALSE, vs, (void *)vt);
+        glVertexAttribPointer((GLuint)NK_Device->attrib_col, 4, GL_UNSIGNED_BYTE, GL_TRUE, vs, (void *)vc);
 
         NK_Atlas = PushStruct(Working_Set, nk_font_atlas);
         nk_font_atlas_init_default(NK_Atlas);
@@ -6134,7 +6122,7 @@ Setup()
         NK_Font = nk_font_atlas_add_from_memory(NK_Atlas, FontBold, (nk_size)FontBold_Size, 22 * Screen_Scale.y, &cfg);
         NK_Font_Browser = nk_font_atlas_add_from_memory(NK_Atlas, FontBold, (nk_size)FontBold_Size, 14 * Screen_Scale.y, &cfg);
 
-        s32 w,h;
+        s32 w, h;
         const void *image = nk_font_atlas_bake(NK_Atlas, &w, &h, NK_FONT_ATLAS_RGBA32);
 
         glGenTextures(1, &NK_Device->font_tex);
@@ -6142,7 +6130,7 @@ Setup()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)w, (GLsizei)h, 0,
-                GL_RGBA, GL_UNSIGNED_BYTE, image);
+                     GL_RGBA, GL_UNSIGNED_BYTE, image);
 
         nk_font_atlas_end(NK_Atlas, nk_handle_id((s32)NK_Device->font_tex), &NK_Device->null);
         u08 *nkContextMemory = PushArray(Working_Set, u08, NK_Memory_Size);
@@ -6159,7 +6147,7 @@ Setup()
 
     Loading_Arena = PushStruct(Working_Set, memory_arena);
     CreateMemoryArena(*Loading_Arena, MegaByte(512));
-    //Loading_Arena = PushSubArena(Working_Set, MegaByte(128));
+    // Loading_Arena = PushSubArena(Working_Set, MegaByte(128));
 }
 
 #if 0
@@ -6181,8 +6169,7 @@ TakeScreenShot()
 }
 #endif
 
-global_function
-void
+global_function void
 InvertMap(u32 pixelFrom, u32 pixelTo)
 {
     if (pixelFrom > pixelTo)
@@ -6196,9 +6183,9 @@ InvertMap(u32 pixelFrom, u32 pixelTo)
 
     Assert(pixelFrom < nPixels);
     Assert(pixelTo < nPixels);
-    
+
     u32 copySize = (pixelTo - pixelFrom + 1) >> 1;
-    
+
     u32 *tmpBuffer = PushArray(Working_Set, u32, copySize);
     u32 *tmpBuffer2 = PushArray(Working_Set, u32, copySize);
     u32 *tmpBuffer3 = PushArray(Working_Set, u32, copySize);
@@ -6260,8 +6247,8 @@ InvertMap(u32 pixelFrom, u32 pixelTo)
 }
 
 global_function
-s32
-RearrangeMap(u32 pixelFrom, u32 pixelTo, s32 delta, u08 snap)
+    s32
+    RearrangeMap(u32 pixelFrom, u32 pixelTo, s32 delta, u08 snap)
 {
     if (pixelFrom > pixelTo)
     {
@@ -6282,7 +6269,7 @@ RearrangeMap(u32 pixelFrom, u32 pixelTo, s32 delta, u08 snap)
     pixelFrom += nPixels;
     pixelTo += nPixels;
 
-    auto GetRealBufferLocation = [nPixels] (u32 index)
+    auto GetRealBufferLocation = [nPixels](u32 index)
     {
         u32 result;
 
@@ -6301,7 +6288,7 @@ RearrangeMap(u32 pixelFrom, u32 pixelTo, s32 delta, u08 snap)
 
         Assert(result >= 0 && result < nPixels);
 
-        return(result);
+        return (result);
     };
 
     u32 forward = delta > 0;
@@ -6315,7 +6302,7 @@ RearrangeMap(u32 pixelFrom, u32 pixelTo, s32 delta, u08 snap)
             if (targetContigId)
             {
                 contig *targetContig = Contigs->contigs + targetContigId - 1;
-                
+
                 u32 targetCoord = IsContigInverted(targetContigId - 1) ? (targetContig->startCoord - targetContig->length + 1) : (targetContig->startCoord + targetContig->length - 1);
                 while (delta > 0 && (Map_State->contigIds[target] != targetContigId - 1 || Map_State->contigRelCoords[target] != targetCoord))
                 {
@@ -6433,7 +6420,7 @@ RearrangeMap(u32 pixelFrom, u32 pixelTo, s32 delta, u08 snap)
         FreeLastPush(Working_Set); // tmpBuffer5
 
         UpdateContigsFromMapState();
-        
+
         map_edit edit;
         edit.finalPix1 = (u32)GetRealBufferLocation((u32)((s32)pixelFrom + delta));
         edit.finalPix2 = (u32)GetRealBufferLocation((u32)((s32)pixelTo + delta));
@@ -6441,12 +6428,11 @@ RearrangeMap(u32 pixelFrom, u32 pixelTo, s32 delta, u08 snap)
         MoveWayPoints(&edit);
     }
 
-    return(delta);
+    return (delta);
 }
 
-global_function
-void
-JumpToDiagonal(GLFWwindow* window)
+global_function void
+JumpToDiagonal(GLFWwindow *window)
 {
     Camera_Position.x = -Camera_Position.y;
     ClampCamera();
@@ -6454,8 +6440,8 @@ JumpToDiagonal(GLFWwindow* window)
 }
 
 global_function
-u32
-ToggleEditMode(GLFWwindow* window)
+    u32
+    ToggleEditMode(GLFWwindow *window)
 {
     u32 result = 1;
 
@@ -6479,21 +6465,25 @@ ToggleEditMode(GLFWwindow* window)
         result = 0;
     }
 
-    return(result);
+    return (result);
 }
 
 global_function
-u32
-ToggleExtensionMode(GLFWwindow* window) {
+    u32
+    ToggleExtensionMode(GLFWwindow *window)
+{
     u32 result = 1;
 
-    if (Extension_Mode) {
+    if (Extension_Mode)
+    {
         Global_Mode = mode_normal;
     }
-    else if (Normal_Mode) {
+    else if (Normal_Mode)
+    {
         Global_Mode = mode_extension;
     }
-    else {
+    else
+    {
         result = 0;
     }
 
@@ -6501,8 +6491,8 @@ ToggleExtensionMode(GLFWwindow* window) {
 }
 
 global_function
-u32
-ToggleWaypointMode(GLFWwindow* window)
+    u32
+    ToggleWaypointMode(GLFWwindow *window)
 {
     u32 result = 1;
 
@@ -6528,12 +6518,12 @@ ToggleWaypointMode(GLFWwindow* window)
         result = 0;
     }
 
-    return(result);
+    return (result);
 }
 
 global_function
-u32
-ToggleScaffMode(GLFWwindow* window)
+    u32
+    ToggleScaffMode(GLFWwindow *window)
 {
     u32 result = 1;
 
@@ -6562,12 +6552,12 @@ ToggleScaffMode(GLFWwindow* window)
         result = 0;
     }
 
-    return(result);
+    return (result);
 }
 
 global_function
-u32
-ToggleMetaDataMode(GLFWwindow* window)
+    u32
+    ToggleMetaDataMode(GLFWwindow *window)
 {
     u32 result = 1;
 
@@ -6593,12 +6583,11 @@ ToggleMetaDataMode(GLFWwindow* window)
         result = 0;
     }
 
-    return(result);
+    return (result);
 }
 
-global_function
-void
-ToggleToolTip(GLFWwindow* window)
+global_function void
+ToggleToolTip(GLFWwindow *window)
 {
     Tool_Tip->on = !Tool_Tip->on;
     if (Tool_Tip->on)
@@ -6633,8 +6622,9 @@ KeyBindings
 #endif
 
 global_variable
-s32
-Windowed_Xpos, Windowed_Ypos, Windowed_Width, Windowed_Height;
+    s32
+        Windowed_Xpos,
+    Windowed_Ypos, Windowed_Width, Windowed_Height;
 
 #if 0
 struct
@@ -6650,20 +6640,19 @@ LastPressedKey = {0, 0};
 #endif
 
 global_variable
-nk_keys
-NK_Pressed_Keys[1024] = {};
+    nk_keys
+        NK_Pressed_Keys[1024] = {};
 
 global_variable
-u32
-NK_Pressed_Keys_Ptr = 0;
+    u32
+        NK_Pressed_Keys_Ptr = 0;
 
 global_variable
-u32
-GatheringTextInput = 0;
+    u32
+        GatheringTextInput = 0;
 
-global_function
-void
-KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
+global_function void
+KeyBoard(GLFWwindow *window, s32 key, s32 scancode, s32 action, s32 mods)
 {
     if (!Loading && (action != GLFW_RELEASE || key == GLFW_KEY_SPACE || key == GLFW_KEY_A || key == GLFW_KEY_LEFT_SHIFT))
     {
@@ -6681,15 +6670,15 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                 if (glfwGetWindowMonitor(window))
                 {
                     glfwSetWindowMonitor(window, NULL,
-                            Windowed_Xpos, Windowed_Ypos,
-                            Windowed_Width, Windowed_Height, 0);
+                                         Windowed_Xpos, Windowed_Ypos,
+                                         Windowed_Width, Windowed_Height, 0);
                 }
                 else
                 {
-                    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+                    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
                     if (monitor)
                     {
-                        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+                        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
                         glfwGetWindowPos(window, &Windowed_Xpos, &Windowed_Ypos);
                         glfwGetWindowSize(window, &Windowed_Width, &Windowed_Height);
                         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
@@ -6697,7 +6686,7 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                 }
             }
 #ifdef Internal
-            else if (key == GLFW_KEY_ESCAPE && !mods) 
+            else if (key == GLFW_KEY_ESCAPE && !mods)
             {
                 glfwSetWindowShouldClose(window, GLFW_TRUE);
             }
@@ -6718,7 +6707,7 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                 nk_input_key(NK_Context, NK_KEY_CUT, glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS);
                 nk_input_key(NK_Context, NK_KEY_CUT, glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS);
                 nk_input_key(NK_Context, NK_KEY_SHIFT, 1);
-            } 
+            }
             else
             {
                 nk_input_key(NK_Context, NK_KEY_COPY, 0);
@@ -6726,7 +6715,6 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                 nk_input_key(NK_Context, NK_KEY_CUT, 0);
                 nk_input_key(NK_Context, NK_KEY_SHIFT, 0);
             }*/
-
 
             else if (key == GLFW_KEY_U)
             {
@@ -6737,43 +6725,44 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
                 nk_keys addKey = NK_KEY_NONE;
                 switch (key)
                 {
-                    case GLFW_KEY_DELETE:
-                        addKey = NK_KEY_DEL;
-                        break;
+                case GLFW_KEY_DELETE:
+                    addKey = NK_KEY_DEL;
+                    break;
 
-                    case GLFW_KEY_ENTER:
-                        addKey = NK_KEY_ENTER;
-                        break;
+                case GLFW_KEY_ENTER:
+                    addKey = NK_KEY_ENTER;
+                    break;
 
-                    case GLFW_KEY_TAB:
-                        addKey = NK_KEY_TAB;
-                        break;
+                case GLFW_KEY_TAB:
+                    addKey = NK_KEY_TAB;
+                    break;
 
-                    case GLFW_KEY_BACKSPACE:
-                        addKey = NK_KEY_BACKSPACE;
-                        break;
+                case GLFW_KEY_BACKSPACE:
+                    addKey = NK_KEY_BACKSPACE;
+                    break;
 
-                    case GLFW_KEY_LEFT:
-                        addKey = NK_KEY_LEFT;
-                        break;
+                case GLFW_KEY_LEFT:
+                    addKey = NK_KEY_LEFT;
+                    break;
 
-                    case GLFW_KEY_RIGHT:
-                        addKey = NK_KEY_RIGHT;
-                        break;
+                case GLFW_KEY_RIGHT:
+                    addKey = NK_KEY_RIGHT;
+                    break;
 
-                    case GLFW_KEY_UP:
-                        addKey = NK_KEY_UP;
-                        break;
+                case GLFW_KEY_UP:
+                    addKey = NK_KEY_UP;
+                    break;
 
-                    case GLFW_KEY_DOWN:
-                        addKey = NK_KEY_DOWN;
-                        break;
+                case GLFW_KEY_DOWN:
+                    addKey = NK_KEY_DOWN;
+                    break;
                 }
 
                 if (addKey != NK_KEY_NONE)
                 {
                     NK_Pressed_Keys[NK_Pressed_Keys_Ptr++] = addKey;
-                    if (NK_Pressed_Keys_Ptr == ArrayCount(NK_Pressed_Keys)) NK_Pressed_Keys_Ptr = 0;
+                    if (NK_Pressed_Keys_Ptr == ArrayCount(NK_Pressed_Keys))
+                        NK_Pressed_Keys_Ptr = 0;
                 }
             }
         }
@@ -6783,342 +6772,359 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
 
             switch (key)
             {
-                case GLFW_KEY_E:
-                    keyPressed = ToggleEditMode(window);
-                    break;
+            case GLFW_KEY_E:
+                keyPressed = ToggleEditMode(window);
+                break;
 
-                case GLFW_KEY_J:
-                    JumpToDiagonal(window);
-                    break;
+            case GLFW_KEY_J:
+                JumpToDiagonal(window);
+                break;
 
-                case GLFW_KEY_X:
-                    keyPressed = ToggleExtensionMode(window);
-                    break;
+            case GLFW_KEY_X:
+                keyPressed = ToggleExtensionMode(window);
+                break;
 
-                case GLFW_KEY_W:
-                    if (Edit_Mode)
-                    {
-                        RedoMapEdit();
-                    }
-                    else
-                    {
-                        keyPressed = ToggleWaypointMode(window);
-                    }
-                    break;
+            case GLFW_KEY_W:
+                if (Edit_Mode)
+                {
+                    RedoMapEdit();
+                }
+                else
+                {
+                    keyPressed = ToggleWaypointMode(window);
+                }
+                break;
 
-                case GLFW_KEY_Q:
-                    if (Edit_Mode)
-                    {
-                        UndoMapEdit();
-                    }
-                    else
-                    {
-                        keyPressed = 0;
-                    }
-                    break;
-                
-                case GLFW_KEY_SPACE:
-                    if (Edit_Mode && !Edit_Pixels.editing && action == GLFW_PRESS)
-                    {
-                        Edit_Pixels.selecting = 1;
-                        Edit_Pixels.selectPixels = Edit_Pixels.pixels;
-                        f64 x, y;
-                        glfwGetCursorPos(window, &x, &y);
-                        MouseMove(window, x, y);
-                    }
-                    else if (Edit_Mode && !Edit_Pixels.editing && action == GLFW_RELEASE)
-                    {
-                        Edit_Pixels.editing = 1;
-                        Edit_Pixels.selecting = 0;
-                        f64 x, y;
-                        glfwGetCursorPos(window, &x, &y);
-                        MouseMove(window, x, y);
-                    }
-                    else if (Edit_Mode && Edit_Pixels.editing && action == GLFW_PRESS)
-                    {
-                        InvertMap(Edit_Pixels.pixels.x, Edit_Pixels.pixels.y);
-                        Global_Edit_Invert_Flag = !Global_Edit_Invert_Flag;
-                    }
-                    else if (Waypoint_Edit_Mode && Selected_Waypoint && action == GLFW_PRESS)
-                    {
-                        f64 x, y;
-                        glfwGetCursorPos(window, &x, &y);
-                        RemoveWayPoint(Selected_Waypoint);
-                        MouseMove(window, x, y);
-                    }
-                    else if (Scaff_Edit_Mode && (action == GLFW_PRESS || action == GLFW_RELEASE))
-                    {
-                        f64 x, y;
-                        glfwGetCursorPos(window, &x, &y);
-                        Scaff_Painting_Flag = action == GLFW_PRESS ? 2 : 0;
-                        MouseMove(window, x, y);
-                        if (action == GLFW_RELEASE) UpdateScaffolds();
-                    }
-                    else if (MetaData_Edit_Mode && (action == GLFW_PRESS || action == GLFW_RELEASE))
-                    {
-                        f64 x, y;
-                        glfwGetCursorPos(window, &x, &y);
-                        MetaData_Edit_State = action == GLFW_PRESS ? 2 : 0;
-                        MouseMove(window, x, y);
-                    }
-                    else
-                    {
-                        keyPressed = 0;
-                    }
-                    break;
-                
-                case GLFW_KEY_T:
-                    if (Extension_Mode && Extensions.head)
-                    {
-                        TraverseLinkedList(Extensions.head, extension_node)
-                        {
-                            switch (node->type)
-                            {
-                                case extension_graph:
-                                {
-                                    
-                                    graph *gph = (graph *)node->extension;
-                                    if (strcmp((char *)gph->name, "telomere") == 0) {
-                                        gph->on = !gph->on;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    else
-                    {
-                        ToggleToolTip(window);
-                    }
-                    break;
+            case GLFW_KEY_Q:
+                if (Edit_Mode)
+                {
+                    UndoMapEdit();
+                }
+                else
+                {
+                    keyPressed = 0;
+                }
+                break;
 
-                case GLFW_KEY_C:
-                    if (Extensions.head)
-                    {
-                        TraverseLinkedList(Extensions.head, extension_node)
-                        {
-                            switch (node->type)
-                            {
-                                case extension_graph:
-                                {
-                                    
-                                    graph *gph = (graph *)node->extension;
-                                    if (strcmp((char *)gph->name, "coverage") == 0) {
-                                        gph->on = !gph->on;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    break;
+            case GLFW_KEY_SPACE:
+                if (Edit_Mode && !Edit_Pixels.editing && action == GLFW_PRESS)
+                {
+                    Edit_Pixels.selecting = 1;
+                    Edit_Pixels.selectPixels = Edit_Pixels.pixels;
+                    f64 x, y;
+                    glfwGetCursorPos(window, &x, &y);
+                    MouseMove(window, x, y);
+                }
+                else if (Edit_Mode && !Edit_Pixels.editing && action == GLFW_RELEASE)
+                {
+                    Edit_Pixels.editing = 1;
+                    Edit_Pixels.selecting = 0;
+                    f64 x, y;
+                    glfwGetCursorPos(window, &x, &y);
+                    MouseMove(window, x, y);
+                }
+                else if (Edit_Mode && Edit_Pixels.editing && action == GLFW_PRESS)
+                {
+                    InvertMap(Edit_Pixels.pixels.x, Edit_Pixels.pixels.y);
+                    Global_Edit_Invert_Flag = !Global_Edit_Invert_Flag;
+                }
+                else if (Waypoint_Edit_Mode && Selected_Waypoint && action == GLFW_PRESS)
+                {
+                    f64 x, y;
+                    glfwGetCursorPos(window, &x, &y);
+                    RemoveWayPoint(Selected_Waypoint);
+                    MouseMove(window, x, y);
+                }
+                else if (Scaff_Edit_Mode && (action == GLFW_PRESS || action == GLFW_RELEASE))
+                {
+                    f64 x, y;
+                    glfwGetCursorPos(window, &x, &y);
+                    Scaff_Painting_Flag = action == GLFW_PRESS ? 2 : 0;
+                    MouseMove(window, x, y);
+                    if (action == GLFW_RELEASE)
+                        UpdateScaffolds();
+                }
+                else if (MetaData_Edit_Mode && (action == GLFW_PRESS || action == GLFW_RELEASE))
+                {
+                    f64 x, y;
+                    glfwGetCursorPos(window, &x, &y);
+                    MetaData_Edit_State = action == GLFW_PRESS ? 2 : 0;
+                    MouseMove(window, x, y);
+                }
+                else
+                {
+                    keyPressed = 0;
+                }
+                break;
 
-                case GLFW_KEY_N:
-                    Contig_Name_Labels->on = !Contig_Name_Labels->on;
-                    break;
-
-                case GLFW_KEY_B:
-                    Scale_Bars->on = !Scale_Bars->on;
-                    break;
-
-                case GLFW_KEY_G:
+            case GLFW_KEY_T:
+                if (Extension_Mode && Extensions.head)
+                {
                     TraverseLinkedList(Extensions.head, extension_node)
                     {
                         switch (node->type)
                         {
-                            case extension_graph:
-                            {
-                                
-                                graph *gph = (graph *)node->extension;
-                                if (strcmp((char *)gph->name, "gap") == 0) {
-                                    gph->on = !gph->on;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    break;
-                
-                case GLFW_KEY_L:
-                    Grid->on = !Grid->on;
-                    break;
-
-                case GLFW_KEY_S:
-                    if (Edit_Mode)
-                    {
-                        Edit_Pixels.snap = !Edit_Pixels.snap;
-                    }
-                    else if (mods & GLFW_MOD_SHIFT)
-                    {
-                        Scaffs_Always_Visible = Scaffs_Always_Visible ? 0 : 1;
-                    }
-                    else
-                    {
-                        keyPressed = ToggleScaffMode(window);
-                    }
-                    break;
-
-                case GLFW_KEY_A:
-                    if (Scaff_Edit_Mode)
-                    {
-                        if (action != GLFW_RELEASE) Scaff_FF_Flag |= 1;
-                        else Scaff_FF_Flag &= ~1;
-                    }
-                    else keyPressed = 0;
-                    break;
-                
-                case GLFW_KEY_LEFT_SHIFT:
-                    if (Scaff_Edit_Mode)
-                    {
-                        if (action != GLFW_RELEASE) Scaff_FF_Flag |= 2;
-                        else Scaff_FF_Flag &= ~2;
-                    }
-                    else if (Edit_Mode) Edit_Pixels.scaffSelecting = action != GLFW_RELEASE;
-                    else keyPressed = 0;
-
-                    if (action == GLFW_PRESS)
-                    {
-                        hztwaypoints = 1;
-                    }
-                    else if (action == GLFW_RELEASE)
-                    {
-                        hztwaypoints = 0;
-                    }
-                    break;
-
-                case GLFW_KEY_D:
-                    if (Scaff_Edit_Mode && (mods & GLFW_MOD_SHIFT))
-                    {
-                        ForLoop(Contigs->numberOfContigs) (Contigs->contigs + index)->scaffId = 0;
-                        UpdateScaffolds();
-                    }
-                    else if (MetaData_Edit_Mode && (mods & GLFW_MOD_SHIFT)) memset(Map_State->metaDataFlags, 0, Number_of_Pixels_1D * sizeof(u64));
-                    else keyPressed = 0;
-                    break;
-
-                case GLFW_KEY_M:
-                    keyPressed = ToggleMetaDataMode(window);
-                    break;
-
-                case GLFW_KEY_I:
-                    Contig_Ids->on = !Contig_Ids->on;
-                    break;
-
-                case GLFW_KEY_U:
-                    UI_On = !UI_On;
-                    ++NK_Device->lastContextMemory[0];
-                    Mouse_Move.x = Mouse_Move.y = -1;
-                    break;
-
-                case GLFW_KEY_R:
-                    if (mods == GLFW_MOD_CONTROL)
-                    {
-                        Loading = 1;
-                    }
-                    else if (Extension_Mode && Extensions.head)
-                    {
-                        TraverseLinkedList(Extensions.head, extension_node)
+                        case extension_graph:
                         {
-                            switch (node->type)
-                            {
-                                case extension_graph:
-                                {
-                                    graph *gph = (graph *)node->extension;
-                                    if (strcmp((char *)gph->name, "repeat_density") == 0) {
-                                        gph->on = !gph->on;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    else
-                    {
-                        keyPressed = 0;
-                    }
-                    break;
 
-                case GLFW_KEY_LEFT:
-                    if (MetaData_Edit_Mode)
-                    {
-                        u32 nextActive = MetaData_Active_Tag;
-                        ForLoop(ArrayCount(Meta_Data->tags))
-                        {
-                            if (--nextActive > (ArrayCount(Meta_Data->tags) - 1)) nextActive = ArrayCount(Meta_Data->tags) - 1;
-                            if (strlen((const char *)Meta_Data->tags[nextActive]))
+                            graph *gph = (graph *)node->extension;
+                            if (strcmp((char *)gph->name, "telomere") == 0)
                             {
-                                MetaData_Active_Tag = nextActive;
+                                gph->on = !gph->on;
                                 break;
                             }
                         }
-
+                        }
                     }
-                    else AdjustColorMap(-1);
                     break;
+                }
+                else
+                {
+                    ToggleToolTip(window);
+                }
+                break;
 
-                case GLFW_KEY_RIGHT:
-                    if (MetaData_Edit_Mode)
+            case GLFW_KEY_C:
+                if (Extensions.head)
+                {
+                    TraverseLinkedList(Extensions.head, extension_node)
                     {
-                        u32 nextActive = MetaData_Active_Tag;
-                        ForLoop(ArrayCount(Meta_Data->tags))
+                        switch (node->type)
                         {
-                            if (++nextActive == ArrayCount(Meta_Data->tags)) nextActive = 0;
-                            if (strlen((const char *)Meta_Data->tags[nextActive]))
+                        case extension_graph:
+                        {
+
+                            graph *gph = (graph *)node->extension;
+                            if (strcmp((char *)gph->name, "coverage") == 0)
                             {
-                                MetaData_Active_Tag = nextActive;
+                                gph->on = !gph->on;
                                 break;
                             }
                         }
-                    }
-                    else AdjustColorMap(1);
-                    break;
-
-                case GLFW_KEY_UP:
-                    NextColorMap(1);
-                    break;
-
-                case GLFW_KEY_DOWN:
-                    NextColorMap(-1);
-                    break;
-#ifdef Internal
-                case GLFW_KEY_ESCAPE:
-                    if (!mods)
-                    {
-                        glfwSetWindowShouldClose(window, GLFW_TRUE);
-                    }
-                    break;
-#endif
-                case GLFW_KEY_ENTER:
-                    if (mods == GLFW_MOD_ALT)
-                    {
-                        if (glfwGetWindowMonitor(window))
-                        {
-                            glfwSetWindowMonitor(window, NULL,
-                                    Windowed_Xpos, Windowed_Ypos,
-                                    Windowed_Width, Windowed_Height, 0);
-                        }
-                        else
-                        {
-                            GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-                            if (monitor)
-                            {
-                                const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-                                glfwGetWindowPos(window, &Windowed_Xpos, &Windowed_Ypos);
-                                glfwGetWindowSize(window, &Windowed_Width, &Windowed_Height);
-                                glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-                            }
                         }
                     }
+                }
+                break;
+
+            case GLFW_KEY_N:
+                Contig_Name_Labels->on = !Contig_Name_Labels->on;
+                break;
+
+            case GLFW_KEY_B:
+                Scale_Bars->on = !Scale_Bars->on;
+                break;
+
+            case GLFW_KEY_G:
+                TraverseLinkedList(Extensions.head, extension_node)
+                {
+                    switch (node->type)
+                    {
+                    case extension_graph:
+                    {
+
+                        graph *gph = (graph *)node->extension;
+                        if (strcmp((char *)gph->name, "gap") == 0)
+                        {
+                            gph->on = !gph->on;
+                            break;
+                        }
+                    }
+                    }
+                }
+                break;
+
+            case GLFW_KEY_L:
+                Grid->on = !Grid->on;
+                break;
+
+            case GLFW_KEY_S:
+                if (Edit_Mode)
+                {
+                    Edit_Pixels.snap = !Edit_Pixels.snap;
+                }
+                else if (mods & GLFW_MOD_SHIFT)
+                {
+                    Scaffs_Always_Visible = Scaffs_Always_Visible ? 0 : 1;
+                }
+                else
+                {
+                    keyPressed = ToggleScaffMode(window);
+                }
+                break;
+
+            case GLFW_KEY_A:
+                if (Scaff_Edit_Mode)
+                {
+                    if (action != GLFW_RELEASE)
+                        Scaff_FF_Flag |= 1;
                     else
-                    {
-                        keyPressed = 0;
-                    }
-                    break;
-
-                default:
+                        Scaff_FF_Flag &= ~1;
+                }
+                else
                     keyPressed = 0;
+                break;
+
+            case GLFW_KEY_LEFT_SHIFT:
+                if (Scaff_Edit_Mode)
+                {
+                    if (action != GLFW_RELEASE)
+                        Scaff_FF_Flag |= 2;
+                    else
+                        Scaff_FF_Flag &= ~2;
+                }
+                else if (Edit_Mode)
+                    Edit_Pixels.scaffSelecting = action != GLFW_RELEASE;
+                else
+                    keyPressed = 0;
+
+                if (action == GLFW_PRESS)
+                {
+                    hztwaypoints = 1;
+                }
+                else if (action == GLFW_RELEASE)
+                {
+                    hztwaypoints = 0;
+                }
+                break;
+
+            case GLFW_KEY_D:
+                if (Scaff_Edit_Mode && (mods & GLFW_MOD_SHIFT))
+                {
+                    ForLoop(Contigs->numberOfContigs)(Contigs->contigs + index)->scaffId = 0;
+                    UpdateScaffolds();
+                }
+                else if (MetaData_Edit_Mode && (mods & GLFW_MOD_SHIFT))
+                    memset(Map_State->metaDataFlags, 0, Number_of_Pixels_1D * sizeof(u64));
+                else
+                    keyPressed = 0;
+                break;
+
+            case GLFW_KEY_M:
+                keyPressed = ToggleMetaDataMode(window);
+                break;
+
+            case GLFW_KEY_I:
+                Contig_Ids->on = !Contig_Ids->on;
+                break;
+
+            case GLFW_KEY_U:
+                UI_On = !UI_On;
+                ++NK_Device->lastContextMemory[0];
+                Mouse_Move.x = Mouse_Move.y = -1;
+                break;
+
+            case GLFW_KEY_R:
+                if (mods == GLFW_MOD_CONTROL)
+                {
+                    Loading = 1;
+                }
+                else if (Extension_Mode && Extensions.head)
+                {
+                    TraverseLinkedList(Extensions.head, extension_node)
+                    {
+                        switch (node->type)
+                        {
+                        case extension_graph:
+                        {
+                            graph *gph = (graph *)node->extension;
+                            if (strcmp((char *)gph->name, "repeat_density") == 0)
+                            {
+                                gph->on = !gph->on;
+                                break;
+                            }
+                        }
+                        }
+                    }
+                    break;
+                }
+                else
+                {
+                    keyPressed = 0;
+                }
+                break;
+
+            case GLFW_KEY_LEFT:
+                if (MetaData_Edit_Mode)
+                {
+                    u32 nextActive = MetaData_Active_Tag;
+                    ForLoop(ArrayCount(Meta_Data->tags))
+                    {
+                        if (--nextActive > (ArrayCount(Meta_Data->tags) - 1))
+                            nextActive = ArrayCount(Meta_Data->tags) - 1;
+                        if (strlen((const char *)Meta_Data->tags[nextActive]))
+                        {
+                            MetaData_Active_Tag = nextActive;
+                            break;
+                        }
+                    }
+                }
+                else
+                    AdjustColorMap(-1);
+                break;
+
+            case GLFW_KEY_RIGHT:
+                if (MetaData_Edit_Mode)
+                {
+                    u32 nextActive = MetaData_Active_Tag;
+                    ForLoop(ArrayCount(Meta_Data->tags))
+                    {
+                        if (++nextActive == ArrayCount(Meta_Data->tags))
+                            nextActive = 0;
+                        if (strlen((const char *)Meta_Data->tags[nextActive]))
+                        {
+                            MetaData_Active_Tag = nextActive;
+                            break;
+                        }
+                    }
+                }
+                else
+                    AdjustColorMap(1);
+                break;
+
+            case GLFW_KEY_UP:
+                NextColorMap(1);
+                break;
+
+            case GLFW_KEY_DOWN:
+                NextColorMap(-1);
+                break;
+#ifdef Internal
+            case GLFW_KEY_ESCAPE:
+                if (!mods)
+                {
+                    glfwSetWindowShouldClose(window, GLFW_TRUE);
+                }
+                break;
+#endif
+            case GLFW_KEY_ENTER:
+                if (mods == GLFW_MOD_ALT)
+                {
+                    if (glfwGetWindowMonitor(window))
+                    {
+                        glfwSetWindowMonitor(window, NULL,
+                                             Windowed_Xpos, Windowed_Ypos,
+                                             Windowed_Width, Windowed_Height, 0);
+                    }
+                    else
+                    {
+                        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+                        if (monitor)
+                        {
+                            const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+                            glfwGetWindowPos(window, &Windowed_Xpos, &Windowed_Ypos);
+                            glfwGetWindowSize(window, &Windowed_Width, &Windowed_Height);
+                            glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+                        }
+                    }
+                }
+                else
+                {
+                    keyPressed = 0;
+                }
+                break;
+
+            default:
+                keyPressed = 0;
             }
 
             if (keyPressed)
@@ -7129,8 +7135,7 @@ KeyBoard(GLFWwindow* window, s32 key, s32 scancode, s32 action, s32 mods)
     }
 }
 
-global_function
-void
+global_function void
 ErrorCallback(s32 error, const char *desc)
 {
     (void)error;
@@ -7145,7 +7150,7 @@ ErrorCallback(s32 error, const char *desc)
  *
  * ===============================================================*/
 struct
-icons
+    icons
 {
     struct nk_image home;
     struct nk_image computer;
@@ -7155,16 +7160,14 @@ icons
     struct nk_image img_file;
 };
 
-enum
-file_groups
+enum file_groups
 {
     FILE_GROUP_DEFAULT,
     FILE_GROUP_PRETEXT,
     FILE_GROUP_MAX
 };
 
-enum
-file_types
+enum file_types
 {
     FILE_DEFAULT,
     FILE_PRETEXT,
@@ -7173,7 +7176,7 @@ file_types
 };
 
 struct
-file_group
+    file_group
 {
     enum file_groups group;
     u32 pad;
@@ -7182,7 +7185,7 @@ file_group
 };
 
 struct
-file
+    file
 {
     enum file_types type;
     enum file_groups group;
@@ -7190,7 +7193,7 @@ file
 };
 
 struct
-media
+    media
 {
     int font;
     int icon_sheet;
@@ -7201,7 +7204,7 @@ media
 
 #define MAX_PATH_LEN 512
 struct
-file_browser
+    file_browser
 {
     /* path */
     char file[MAX_PATH_LEN];
@@ -7225,22 +7228,22 @@ file_browser
 #include <pwd.h>
 #endif
 
-global_function
-char*
+global_function char *
 StrDuplicate(const char *src)
 {
     char *ret;
     size_t len = strlen(src);
-    if (!len) return 0;
-    ret = (char*)malloc(len+1);
-    if (!ret) return 0;
+    if (!len)
+        return 0;
+    ret = (char *)malloc(len + 1);
+    if (!ret)
+        return 0;
     memcpy(ret, src, len);
     ret[len] = '\0';
     return ret;
 }
 
-global_function
-void
+global_function void
 DirFreeList(char **list, size_t size)
 {
     size_t i;
@@ -7250,8 +7253,8 @@ DirFreeList(char **list, size_t size)
 }
 
 global_function
-u32
-StringIsLexBigger(char *string, char *toCompareTo)
+    u32
+    StringIsLexBigger(char *string, char *toCompareTo)
 {
     u32 result;
     u32 equal;
@@ -7262,18 +7265,17 @@ StringIsLexBigger(char *string, char *toCompareTo)
         result = *string > *(toCompareTo++);
     } while (equal && (*(string++) != '\0'));
 
-    return(result);
+    return (result);
 }
 
-global_function
-void
+global_function void
 CharArrayBubbleSort(char **list, u32 size)
 {
     while (size > 1)
     {
         u32 newSize = 0;
         ForLoop(size - 1)
-        {    
+        {
             if (StringIsLexBigger(list[index], list[index + 1]))
             {
                 char *tmp = list[index];
@@ -7286,8 +7288,7 @@ CharArrayBubbleSort(char **list, u32 size)
     }
 }
 
-global_function
-char**
+global_function char **
 DirList(const char *dir, u32 return_subdirs, size_t *count)
 {
     size_t n = 0;
@@ -7310,10 +7311,10 @@ DirList(const char *dir, u32 return_subdirs, size_t *count)
     n = strlen(buffer);
 
 #ifndef _WIN32
-    if (n > 0 && (buffer[n-1] != '/'))
+    if (n > 0 && (buffer[n - 1] != '/'))
         buffer[n++] = '/';
 #else
-    if (n > 0 && (buffer[n-1] != '\\'))
+    if (n > 0 && (buffer[n - 1] != '\\'))
         buffer[n++] = '\\';
 #endif
 
@@ -7326,7 +7327,7 @@ DirList(const char *dir, u32 return_subdirs, size_t *count)
     dirBuff[n] = '*';
     hFind = FindFirstFile(dirBuff, &ffd);
 #endif
-    
+
 #ifndef _WIN32
     if (z != none)
 #else
@@ -7337,7 +7338,8 @@ DirList(const char *dir, u32 return_subdirs, size_t *count)
         u32 nonempty = 1;
         struct dirent *data = readdir(z);
         nonempty = (data != NULL);
-        if (!nonempty) return NULL;
+        if (!nonempty)
+            return NULL;
 #endif
         do
         {
@@ -7349,17 +7351,18 @@ DirList(const char *dir, u32 return_subdirs, size_t *count)
 #ifndef _WIN32
             if (data->d_name[0] == '.')
 #else
-            if (ffd.cFileName[0] == '.') 
+            if (ffd.cFileName[0] == '.')
 #endif
                 continue;
 
 #ifndef _WIN32
-            strncpy(buffer + n, data->d_name, MAX_PATH_LEN-n);
+            strncpy(buffer + n, data->d_name, MAX_PATH_LEN - n);
             y = opendir(buffer);
             is_subdir = (y != NULL);
-            if (y != NULL) closedir(y);
+            if (y != NULL)
+                closedir(y);
 #else
-            strncpy(buffer + n, ffd.cFileName, MAX_PATH_LEN-n);
+            strncpy(buffer + n, ffd.cFileName, MAX_PATH_LEN - n);
             is_subdir = ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 #endif
 
@@ -7367,24 +7370,25 @@ DirList(const char *dir, u32 return_subdirs, size_t *count)
             {
                 if (!size)
                 {
-                    results = (char**)calloc(sizeof(char*), capacity);
-                } 
+                    results = (char **)calloc(sizeof(char *), capacity);
+                }
                 else if (size >= capacity)
                 {
                     void *old = results;
                     capacity = capacity * 2;
-                    results = (char**)realloc(results, capacity * sizeof(char*));
+                    results = (char **)realloc(results, capacity * sizeof(char *));
                     Assert(results);
-                    if (!results) free(old);
+                    if (!results)
+                        free(old);
                 }
 #ifndef _WIN32
                 p = StrDuplicate(data->d_name);
 #else
                 p = StrDuplicate(ffd.cFileName);
-#endif  
+#endif
                 results[size++] = p;
             }
-#ifndef _WIN32    
+#ifndef _WIN32
         } while ((data = readdir(z)) != NULL);
 #else
         } while (FindNextFile(hFind, &ffd) != 0);
@@ -7392,19 +7396,19 @@ DirList(const char *dir, u32 return_subdirs, size_t *count)
     }
 
 #ifndef _WIN32
-    if (z) closedir(z);
+    if (z)
+        closedir(z);
 #else
     FindClose(hFind);
 #endif
     *count = size;
-    
+
     CharArrayBubbleSort(results, (u32)size);
-    
+
     return results;
 }
 
-global_function
-struct file_group
+global_function struct file_group
 FILE_GROUP(enum file_groups group, const char *name, struct nk_image *icon)
 {
     struct file_group fg;
@@ -7414,8 +7418,7 @@ FILE_GROUP(enum file_groups group, const char *name, struct nk_image *icon)
     return fg;
 }
 
-global_function
-struct file
+global_function struct file
 FILE_DEF(enum file_types type, const char *suffix, enum file_groups group)
 {
     struct file fd;
@@ -7425,8 +7428,7 @@ FILE_DEF(enum file_types type, const char *suffix, enum file_groups group)
     return fd;
 }
 
-global_function
-struct nk_image*
+global_function struct nk_image *
 MediaIconForFile(struct media *media, const char *file)
 {
     u32 i = 0;
@@ -7438,7 +7440,7 @@ MediaIconForFile(struct media *media, const char *file)
     /* extract suffix .xxx from file */
     while (*s++ != '\0')
     {
-        if (found && i < (sizeof(suffix)-1))
+        if (found && i < (sizeof(suffix) - 1))
             suffix[i++] = *s;
 
         if (*s == '.')
@@ -7453,9 +7455,9 @@ MediaIconForFile(struct media *media, const char *file)
     }
 
     /* check for all file definition of all groups for fitting suffix*/
-    for (   i = 0;
-            i < FILE_MAX && found;
-            ++i)
+    for (i = 0;
+         i < FILE_MAX && found;
+         ++i)
     {
         struct file *d = &media->files[i];
         {
@@ -7463,7 +7465,8 @@ MediaIconForFile(struct media *media, const char *file)
             s = suffix;
             while (f && *f && *s && *s == *f)
             {
-                s++; f++;
+                s++;
+                f++;
             }
 
             /* found correct file definition so */
@@ -7474,13 +7477,12 @@ MediaIconForFile(struct media *media, const char *file)
     return &media->icons.default_file;
 }
 
-global_function
-void
+global_function void
 MediaInit(struct media *media)
 {
     /* file groups */
     struct icons *icons = &media->icons;
-    media->group[FILE_GROUP_DEFAULT] = FILE_GROUP(FILE_GROUP_DEFAULT,"default",&icons->default_file);
+    media->group[FILE_GROUP_DEFAULT] = FILE_GROUP(FILE_GROUP_DEFAULT, "default", &icons->default_file);
     media->group[FILE_GROUP_PRETEXT] = FILE_GROUP(FILE_GROUP_PRETEXT, "pretext", &icons->img_file);
 
     /* files */
@@ -7489,8 +7491,7 @@ MediaInit(struct media *media)
     media->files[FILE_PSTM] = FILE_DEF(FILE_PSTM, "pstm", FILE_GROUP_PRETEXT);
 }
 
-global_function
-void
+global_function void
 FileBrowserReloadDirectoryContent(struct file_browser *browser, const char *path)
 {
     strncpy(browser->directory, path, MAX_PATH_LEN);
@@ -7500,8 +7501,7 @@ FileBrowserReloadDirectoryContent(struct file_browser *browser, const char *path
     browser->directories = DirList(path, 1, &browser->dir_count);
 }
 
-global_function
-void
+global_function void
 FileBrowserInit(struct file_browser *browser, struct media *media)
 {
     memset(browser, 0, sizeof(*browser));
@@ -7510,74 +7510,75 @@ FileBrowserInit(struct file_browser *browser, struct media *media)
         /* load files and sub-directory list */
         const char *home = getenv("HOME");
 #ifdef _WIN32
-        if (!home) home = getenv("USERPROFILE");
+        if (!home)
+            home = getenv("USERPROFILE");
 #else
-        if (!home) home = getpwuid(getuid())->pw_dir;
+        if (!home)
+            home = getpwuid(getuid())->pw_dir;
 #endif
         {
             size_t l;
             strncpy(browser->home, home, MAX_PATH_LEN);
             l = strlen(browser->home);
 #ifdef _WIN32
-      char *sep = (char *)"\\";
+            char *sep = (char *)"\\";
 #else
-      char *sep = (char *)"/";
+            char *sep = (char *)"/";
 #endif
             strcpy(browser->home + l, sep);
             strcpy(browser->directory, browser->home);
         }
-        
+
         browser->files = DirList(browser->directory, 0, &browser->file_count);
         browser->directories = DirList(browser->directory, 1, &browser->dir_count);
     }
 }
 
-global_variable
-char
-Save_State_Name_Buffer[1024] = {0};
+global_variable char
+    Save_State_Name_Buffer[1024] = {0};
 
-global_variable
-char
-AGP_Name_Buffer[1024] = {0};
+global_variable char
+    AGP_Name_Buffer[1024] = {0};
 
-global_function
-void
+global_function void
 SetSaveStateNameBuffer(char *name)
 {
     u32 ptr = 0;
-    while (*name) 
+    while (*name)
     {
         AGP_Name_Buffer[ptr] = *name;
         Save_State_Name_Buffer[ptr++] = *name++;
     }
-    
+
     u32 ptr1 = ptr;
     name = (char *)".savestate_1";
-    while (*name) Save_State_Name_Buffer[ptr++] = *name++;
+    while (*name)
+        Save_State_Name_Buffer[ptr++] = *name++;
     Save_State_Name_Buffer[ptr] = 0;
 
     ptr = ptr1;
     name = (char *)".agp_1";
-    while (*name) AGP_Name_Buffer[ptr++] = *name++;
+    while (*name)
+        AGP_Name_Buffer[ptr++] = *name++;
     AGP_Name_Buffer[ptr] = 0;
 }
 
 global_function
-u08
-FileBrowserRun(const char *name, struct file_browser *browser, struct nk_context *ctx, u32 show, u08 save = 0)
+    u08
+    FileBrowserRun(const char *name, struct file_browser *browser, struct nk_context *ctx, u32 show, u08 save = 0)
 {
 #ifndef _WIN32
     char pathSep = '/';
 #else
     char pathSep = '\\';
 #endif
-   
+
     struct nk_window *window = nk_window_find(ctx, name);
     u32 doesExist = window != 0;
 
     if (!show && !doesExist)
     {
-        return(0);
+        return (0);
     }
 
     if (show && doesExist && (window->flags & NK_WINDOW_HIDDEN))
@@ -7591,7 +7592,7 @@ FileBrowserRun(const char *name, struct file_browser *browser, struct nk_context
     struct nk_rect total_space;
 
     if (nk_begin(ctx, name, nk_rect(Screen_Scale.x * 50, Screen_Scale.y * 50, Screen_Scale.x * 800, Screen_Scale.y * 600),
-                NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR|NK_WINDOW_MOVABLE|NK_WINDOW_TITLE|NK_WINDOW_CLOSABLE))
+                 NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE | NK_WINDOW_CLOSABLE))
     {
         static f32 ratio[] = {0.25f, NK_UNDEFINED};
         f32 spacing_x = ctx->style.window.spacing.x;
@@ -7611,7 +7612,8 @@ FileBrowserRun(const char *name, struct file_browser *browser, struct nk_context
                     *d = '\0';
                     if (nk_button_label(ctx, begin))
                     {
-                        *d++ = pathSep; *d = '\0';
+                        *d++ = pathSep;
+                        *d = '\0';
                         FileBrowserReloadDirectoryContent(browser, browser->directory);
                         break;
                     }
@@ -7635,7 +7637,7 @@ FileBrowserRun(const char *name, struct file_browser *browser, struct nk_context
             nk_layout_row_dynamic(ctx, Screen_Scale.y * 40.0f, 1);
             if (nk_button_image_label(ctx, home, "home", NK_TEXT_CENTERED))
                 FileBrowserReloadDirectoryContent(browser, browser->home);
-            if (nk_button_image_label(ctx,computer,"computer",NK_TEXT_CENTERED))
+            if (nk_button_image_label(ctx, computer, "computer", NK_TEXT_CENTERED))
 #ifndef _WIN32
                 FileBrowserReloadDirectoryContent(browser, "/");
 #else
@@ -7648,38 +7650,38 @@ FileBrowserRun(const char *name, struct file_browser *browser, struct nk_context
         nk_group_begin(ctx, "Content", 0);
         {
             s32 index = -1;
-            size_t i = 0, j = 0;//, k = 0;
+            size_t i = 0, j = 0; //, k = 0;
             size_t rows = 0, cols = 0;
             size_t count = browser->dir_count + browser->file_count;
             f32 iconRatio[] = {0.05f, NK_UNDEFINED};
 
             cols = 1;
             rows = count / cols;
-            for (   i = 0;
-                    i <= rows;
-                    i += 1)
+            for (i = 0;
+                 i <= rows;
+                 i += 1)
             {
                 {
                     size_t n = j + cols;
                     nk_layout_row(ctx, NK_DYNAMIC, Screen_Scale.y * 25.0f, 2, iconRatio);
-                    for (   ; 
-                            j < count && j < n;
-                            ++j)
+                    for (;
+                         j < count && j < n;
+                         ++j)
                     {
                         /* draw one row of icons */
                         if (j < browser->dir_count)
                         {
                             /* draw and execute directory buttons */
-                            if (nk_button_image(ctx,media->icons.directory))
+                            if (nk_button_image(ctx, media->icons.directory))
                                 index = (s32)j;
                             nk_label(ctx, browser->directories[j], NK_TEXT_LEFT);
-                        } 
-                        else 
+                        }
+                        else
                         {
                             /* draw and execute files buttons */
                             struct nk_image *icon;
                             size_t fileIndex = ((size_t)j - browser->dir_count);
-                            icon = MediaIconForFile(media,browser->files[fileIndex]);
+                            icon = MediaIconForFile(media, browser->files[fileIndex]);
                             if (nk_button_image(ctx, *icon))
                             {
                                 if (save)
@@ -7694,7 +7696,7 @@ FileBrowserRun(const char *name, struct file_browser *browser, struct nk_context
                                     ret = 1;
                                 }
                             }
-                            nk_label(ctx,browser->files[fileIndex],NK_TEXT_LEFT);
+                            nk_label(ctx, browser->files[fileIndex], NK_TEXT_LEFT);
                         }
                     }
                 }
@@ -7708,11 +7710,11 @@ FileBrowserRun(const char *name, struct file_browser *browser, struct nk_context
                 if (n < MAX_PATH_LEN - 1)
                 {
                     browser->directory[n] = pathSep;
-                    browser->directory[n+1] = '\0';
+                    browser->directory[n + 1] = '\0';
                 }
                 FileBrowserReloadDirectoryContent(browser, browser->directory);
             }
-            
+
             nk_group_end(ctx);
         }
 
@@ -7728,14 +7730,16 @@ FileBrowserRun(const char *name, struct file_browser *browser, struct nk_context
                 nk_layout_row(ctx, NK_DYNAMIC, Screen_Scale.y * 35.0f, save == 2 ? 5 : 3, save == 2 ? fileRatio2 : fileRatio);
 
                 u08 saveViaEnter = (nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD | NK_EDIT_SIG_ENTER, save == 2 ? AGP_Name_Buffer : Save_State_Name_Buffer, sizeof(save == 2 ? AGP_Name_Buffer : Save_State_Name_Buffer), 0) & NK_EDIT_COMMITED) ? 1 : 0;
-                
+
                 static u08 overwrite = 0;
                 overwrite = (u08)nk_check_label(ctx, "Override", overwrite);
-                
+
                 static u08 singletons = 0;
-                if (save == 2) singletons = (u08)nk_check_label(ctx, "Format Singletons", singletons);
+                if (save == 2)
+                    singletons = (u08)nk_check_label(ctx, "Format Singletons", singletons);
                 static u08 preserveOrder = 0;
-                if (save == 2) preserveOrder = (u08)nk_check_label(ctx, "Preserve Order", preserveOrder);
+                if (save == 2)
+                    preserveOrder = (u08)nk_check_label(ctx, "Preserve Order", preserveOrder);
 
                 if (nk_button_label(ctx, "Save") || saveViaEnter)
                 {
@@ -7748,27 +7752,28 @@ FileBrowserRun(const char *name, struct file_browser *browser, struct nk_context
                 nk_group_end(ctx);
             }
         }
-        
+
         nk_style_set_font(ctx, &NK_Font->handle);
     }
     nk_end(ctx);
-    
-    return(ret);
+
+    return (ret);
 }
 
-global_function
-void
+global_function void
 MetaTagsEditorRun(struct nk_context *ctx, u08 show)
 {
     const char *name = "Meta Data Tag Editor";
     struct nk_window *window = nk_window_find(ctx, name);
 
     u08 doesExist = window != 0;
-    if (!show && !doesExist) return;
-    if (show && doesExist && (window->flags & NK_WINDOW_HIDDEN)) window->flags &= ~(nk_flags)NK_WINDOW_HIDDEN;
+    if (!show && !doesExist)
+        return;
+    if (show && doesExist && (window->flags & NK_WINDOW_HIDDEN))
+        window->flags &= ~(nk_flags)NK_WINDOW_HIDDEN;
 
     if (nk_begin(ctx, name, nk_rect(Screen_Scale.x * 50, Screen_Scale.y * 50, Screen_Scale.x * 800, Screen_Scale.y * 600),
-                NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_CLOSABLE|NK_WINDOW_NO_SCROLLBAR))
+                 NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_CLOSABLE | NK_WINDOW_NO_SCROLLBAR))
     {
         Deferred_Close_UI = 0;
 
@@ -7793,7 +7798,8 @@ MetaTagsEditorRun(struct nk_context *ctx, u08 show)
                         u32 nextActive = index;
                         ForLoop2((ArrayCount(Meta_Data->tags) - 1))
                         {
-                            if (++nextActive == ArrayCount(Meta_Data->tags)) nextActive = 0;
+                            if (++nextActive == ArrayCount(Meta_Data->tags))
+                                nextActive = 0;
                             if (strlen((const char *)Meta_Data->tags[nextActive]))
                             {
                                 MetaData_Active_Tag = nextActive;
@@ -7801,18 +7807,18 @@ MetaTagsEditorRun(struct nk_context *ctx, u08 show)
                             }
                         }
                     }
-                    else if (!strlen((const char *)Meta_Data->tags[MetaData_Active_Tag])) MetaData_Active_Tag = index;
+                    else if (!strlen((const char *)Meta_Data->tags[MetaData_Active_Tag]))
+                        MetaData_Active_Tag = index;
                 }
             }
-            
+
             nk_group_end(ctx);
         }
     }
     nk_end(ctx);
 }
 
-global_function
-void
+global_function void
 AboutWindowRun(struct nk_context *ctx, u32 show)
 {
     struct nk_window *window = nk_window_find(ctx, "About");
@@ -7828,12 +7834,17 @@ AboutWindowRun(struct nk_context *ctx, u32 show)
         window->flags &= ~(nk_flags)NK_WINDOW_HIDDEN;
     }
 
-    enum windowMode {showAcknowledgements, showLicence, showThirdParty};
+    enum windowMode
+    {
+        showAcknowledgements,
+        showLicence,
+        showThirdParty
+    };
 
     static windowMode mode = showAcknowledgements;
 
     if (nk_begin_titled(ctx, "About", PretextView_Version, nk_rect(Screen_Scale.x * 50, Screen_Scale.y * 50, Screen_Scale.x * 870, Screen_Scale.y * 610),
-                NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR|NK_WINDOW_MOVABLE|NK_WINDOW_TITLE|NK_WINDOW_CLOSABLE))
+                        NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE | NK_WINDOW_CLOSABLE))
     {
         nk_menubar_begin(ctx);
         {
@@ -7895,7 +7906,7 @@ resources, click each entry to view its licence.)text";
                 s32 len = sizeof(Licence);
                 nk_edit_string(ctx, NK_EDIT_READ_ONLY | NK_EDIT_NO_CURSOR | NK_EDIT_SELECTABLE | NK_EDIT_MULTILINE, (char *)Licence, &len, len, 0);
             }
-            
+
             nk_group_end(ctx);
         }
     }
@@ -7903,25 +7914,22 @@ resources, click each entry to view its licence.)text";
     nk_end(ctx);
 }
 
-global_function
-u08
+global_function void
 UserSaveState(char *, u08, char *);
 
-global_variable
-char
-profile_savebuff[1024] = {0};
-
+global_variable char
+    profile_savebuff[1024] = {0};
 
 global_function
-u08
-UserProfileEditorRun(const char *name, struct file_browser *browser, struct nk_context *ctx, u32 show, u08 save = 0)
-{      
+    u08
+    UserProfileEditorRun(const char *name, struct file_browser *browser, struct nk_context *ctx, u32 show, u08 save = 0)
+{
     struct nk_window *window = nk_window_find(ctx, name);
     u32 doesExist = window != 0;
 
     if (!show && !doesExist)
     {
-        return(0);
+        return (0);
     }
 
     if (show && doesExist && (window->flags & NK_WINDOW_HIDDEN))
@@ -7935,74 +7943,67 @@ UserProfileEditorRun(const char *name, struct file_browser *browser, struct nk_c
     struct nk_rect total_space;
 
     if (nk_begin(ctx, name, nk_rect(Screen_Scale.x * 50, Screen_Scale.y * 50, Screen_Scale.x * 830, Screen_Scale.y * 600),
-                NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_TITLE|NK_WINDOW_CLOSABLE|NK_WINDOW_SCALABLE))
+                 NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE | NK_WINDOW_CLOSABLE | NK_WINDOW_SCALABLE))
     {
-        
+
         nk_layout_row_dynamic(ctx, Screen_Scale.y * 30.0f, 1);
-
-        // nk_edit_string_zero_terminated(NK_Context, NK_EDIT_FIELD, profile_savebuff, sizeof(profile_savebuff) - 1, nk_filter_default);
-
-        // if (nk_button_label(ctx, "Save"))
-        // {
-        //     UserSaveState(profile_savebuff, 1, 0);
-        // }        
 
         if (nk_button_label(ctx, "Save"))
         {
             UserSaveState("userprofile", 1, 0);
-        }    
+        }
 
         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 4);
 
         if (Extensions.head)
         {
-            //extensions
+            // extensions
             if (nk_tree_push(NK_Context, NK_TREE_TAB, "Extensions", NK_MINIMIZED))
 
             {
                 char buff[128];
 
                 nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 1);
-                
+
                 TraverseLinkedList(Extensions.head, extension_node)
                 {
                     switch (node->type)
                     {
-                        case extension_graph:
+                    case extension_graph:
+                    {
+                        graph *gph = (graph *)node->extension;
+
+                        stbsp_snprintf(buff, sizeof(buff), "Graph: %s", (char *)gph->name);
+
+                        nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 5);
+                        gph->on = nk_check_label(NK_Context, buff, (s32)gph->on) ? 1 : 0;
+
+                        u08 currselection = gph->activecolor; // Start with the graph's current color selection
+
+                        ForLoop(4)
                         {
-                            graph *gph = (graph *)node->extension;
-
-                            stbsp_snprintf(buff, sizeof(buff), "Graph: %s", (char *)gph->name);
-
-                            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 5);
-                            gph->on = nk_check_label(NK_Context, buff, (s32)gph->on) ? 1 : 0;
-
-                            u08 currselection = gph->activecolor;  // Start with the graph's current color selection
-                            
-                            ForLoop(4)
+                            // Update currselection based on user choice in nk_option_label
+                            if (nk_option_label(NK_Context, colour_graph[index], currselection == index))
                             {
-                                // Update currselection based on user choice in nk_option_label
-                                if (nk_option_label(NK_Context, colour_graph[index], currselection == index))
-                                {
-                                    currselection = index;
-                                }
+                                currselection = index;
                             }
+                        }
 
-                            if (currselection != gph->activecolor)
-                            {
-                                gph->activecolor = currselection;
-                                gph->colour = graphColors[gph->activecolor];
-                            }
-                        } break;
+                        if (currselection != gph->activecolor)
+                        {
+                            gph->activecolor = currselection;
+                            gph->colour = graphColors[gph->activecolor];
+                        }
+                    }
+                    break;
                     }
                 }
 
                 nk_tree_pop(NK_Context);
             }
-
         }
 
-        //metadata tags
+        // metadata tags
         if (nk_tree_push(NK_Context, NK_TREE_TAB, "MetaData Tags", NK_MINIMIZED))
         {
             char buff[128];
@@ -8025,7 +8026,7 @@ UserProfileEditorRun(const char *name, struct file_browser *browser, struct nk_c
             meta_outline->on = select;
             if (nk_tree_push(NK_Context, NK_TREE_TAB, "Color profiles", NK_MINIMIZED))
             {
-                char buff[128];                    
+                char buff[128];
                 u08 selection = meta_data_curcolorProfile;
 
                 ForLoop(4)
@@ -8047,43 +8048,122 @@ UserProfileEditorRun(const char *name, struct file_browser *browser, struct nk_c
             nk_tree_pop(NK_Context);
         }
 
+        // Background colour
         if (nk_tree_push(NK_Context, NK_TREE_TAB, "Background Colour", NK_MINIMIZED))
+        {
+            char buff[128];
+            u08 selection = active_bgcolor;
+
+            ForLoop(7)
+            {
+                // Update currselection based on user choice in nk_option_label
+                if (nk_option_label(NK_Context, bg_color[index], selection == index))
                 {
-                    char buff[128];                    
-                    u08 selection = active_bgcolor;
-
-                    ForLoop(7)
-                    {
-                        // Update currselection based on user choice in nk_option_label
-                        if (nk_option_label(NK_Context, bg_color[index], selection == index))
-                        {
-                            selection = index;
-                        }
-                    }
-
-                    if (active_bgcolor != selection)
-                    {
-                        active_bgcolor = selection;
-                    }
-
-                    nk_tree_pop(NK_Context);
+                    selection = index;
                 }
-                nk_tree_pop(NK_Context);
-        
+            }
+
+            if (active_bgcolor != selection)
+            {
+                active_bgcolor = selection;
+            }
+
+            nk_tree_pop(NK_Context);
+        }
+
+        // Custom ordering for Colour maps
+        if (nk_tree_push(NK_Context, NK_TREE_TAB, "Color Map Order", NK_MINIMIZED))
+        {
+            static int selectedIndex = -1; 
+            bool orderChanged = false;
+
+            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 1);
+            if (nk_checkbox_label(NK_Context, "Use Custom Color Map Order", &useCustomOrder))
+            {
+                orderChanged = true;
+            }
+
+            // "Reset to Default Order" button
+            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 1);
+            if (nk_button_label(NK_Context, "Reset to Default Order"))
+            {
+                for (u32 i = 0; i < Color_Maps->nMaps; i++)
+                {
+                    userColourMapOrder.order[i] = i;
+                }
+                selectedIndex = -1;
+                orderChanged = true;
+            }
+
+            if (useCustomOrder)
+            {
+                for (u32 i = 0; i < Color_Maps->nMaps; i++)
+                {
+                    u32 mapIndex = userColourMapOrder.order[i];
+
+                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 50.0f, 1);
+
+                    if (nk_group_begin(NK_Context, Color_Map_Names[mapIndex], NK_WINDOW_NO_SCROLLBAR))
+                    {
+                        if (i == selectedIndex)
+                        {
+                            nk_style_push_color(NK_Context, &NK_Context->style.window.background, nk_rgb(150, 150, 200));
+                        }
+
+                        nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 1);
+                        if (nk_button_label(NK_Context, Color_Map_Names[mapIndex]))
+                        {
+                            if (selectedIndex == -1)
+                            {
+                                selectedIndex = i;
+                            }
+                            else
+                            {
+                                // Swap the selected items
+                                u32 temp = userColourMapOrder.order[selectedIndex];
+                                userColourMapOrder.order[selectedIndex] = userColourMapOrder.order[i];
+                                userColourMapOrder.order[i] = temp;
+                                selectedIndex = -1;
+                                orderChanged = true;
+                            }
+                        }
+
+                        if (i == selectedIndex)
+                        {
+                            nk_style_pop_color(NK_Context);
+                        }
+
+                        nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 40.0f, 1);
+                        nk_image(NK_Context, Color_Maps->mapPreviews[mapIndex]);
+
+                        nk_group_end(NK_Context);
+                    }
+                }
+            }
+            else
+            {
+                nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 1);
+                nk_label(NK_Context, "Enable custom order to reorder color maps", NK_TEXT_LEFT);
+            }
+
+            nk_tree_pop(NK_Context);
+        }
+
+        nk_tree_pop(NK_Context);
+
         nk_style_set_font(ctx, &NK_Font->handle);
     }
     nk_end(ctx);
-    
-    return(ret);
+
+    return (ret);
 }
 
-global_function
-struct nk_image
+global_function struct nk_image
 IconLoad(u08 *buffer, u32 bufferSize)
 {
-    s32 x,y,n;
+    s32 x, y, n;
     GLuint tex;
-    u08 *data = stbi_load_from_memory((const u08*)buffer, (s32)bufferSize, &x, &y, &n, 0);
+    u08 *data = stbi_load_from_memory((const u08 *)buffer, (s32)bufferSize, &x, &y, &n, 0);
     if (!data)
     {
         fprintf(stderr, "Failed to load image\n");
@@ -8103,25 +8183,24 @@ IconLoad(u08 *buffer, u32 bufferSize)
 //
 
 #ifdef DEBUG
-global_function
-void
-GLAPIENTRY
-MessageCallback( GLenum source,
-        GLenum type,
-        GLuint id,
-        GLenum severity,
-        GLsizei length,
-        const GLchar* message,
-        const void* userParam )
+global_function void
+    GLAPIENTRY
+    MessageCallback(GLenum source,
+                    GLenum type,
+                    GLuint id,
+                    GLenum severity,
+                    GLsizei length,
+                    const GLchar *message,
+                    const void *userParam)
 {
     (void)source;
     (void)id;
     (void)length;
     (void)userParam;
-    fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-            ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
-            type, severity, message );
-    
+    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+            type, severity, message);
+
     u32 BreakHere = 0;
     (void)BreakHere;
 }
@@ -8133,16 +8212,13 @@ MessageCallback( GLenum source,
 #include <unistd.h>
 #endif
 
-global_variable
-u08 *
-SaveState_Path = 0;
+global_variable u08 *
+    SaveState_Path = 0;
 
-global_variable
-u08 *
-SaveState_Name = 0;
+global_variable u08 *
+    SaveState_Name = 0;
 
-global_function
-void
+global_function void
 SetSaveStatePaths()
 {
     if (!SaveState_Path)
@@ -8162,16 +8238,21 @@ SetSaveStatePaths()
         else
         {
             path = getenv("HOME");
-            if (!path) path = getpwuid(getuid())->pw_dir;
+            if (!path)
+                path = getpwuid(getuid())->pw_dir;
             folder = (char *)".config";
             folder2 = (char *)"PretextView";
         }
 
         if (path)
         {
-            while ((*buff++ = *path++)) {}
+            while ((*buff++ = *path++))
+            {
+            }
             *(buff - 1) = sep;
-            while ((*buff++ = *folder++)) {}
+            while ((*buff++ = *folder++))
+            {
+            }
 
             mkdir((char *)buff_, 0700);
             struct stat st = {};
@@ -8183,7 +8264,9 @@ SetSaveStatePaths()
                 if (folder2)
                 {
                     *(buff - 1) = sep;
-                    while ((*buff++ = *folder2++)) {}
+                    while ((*buff++ = *folder2++))
+                    {
+                    }
 
                     mkdir((char *)buff_, 0700);
                     if (!stat((char *)buff_, &st))
@@ -8195,8 +8278,8 @@ SetSaveStatePaths()
                 {
                     goodPath = 1;
                 }
-            } 
-            
+            }
+
             if (goodPath)
             {
                 u32 n = StringLength((u08 *)buff_);
@@ -8214,42 +8297,47 @@ SetSaveStatePaths()
         if (SUCCEEDED(hres))
         {
             PWSTR pathPtr = path;
-            while ((*buff++ = *pathPtr++)) {}
+            while ((*buff++ = *pathPtr++))
+            {
+            }
             *(buff - 1) = sep;
             char *folder = (char *)"PretextView";
-            while ((*buff++ = *folder++)) {}
+            while ((*buff++ = *folder++))
+            {
+            }
 
             if (CreateDirectory((char *)buff_, NULL) || ERROR_ALREADY_EXISTS == GetLastError())
             {
-                u32 n = StringLength((u08*)buff_);
+                u32 n = StringLength((u08 *)buff_);
                 SaveState_Path = PushArray(Working_Set, u08, n + 18);
-                CopyNullTerminatedString((u08*)buff_, SaveState_Path);
+                CopyNullTerminatedString((u08 *)buff_, SaveState_Path);
                 SaveState_Path[n] = (u08)sep;
                 SaveState_Name = SaveState_Path + n + 1;
                 SaveState_Path[n + 17] = 0;
             }
         }
 
-        if (path) CoTaskMemFree(path);
+        if (path)
+            CoTaskMemFree(path);
 #endif
     }
 }
 
 global_variable
-u08
-SaveState_Magic[5] = {'p', 't', 's', 'x', 8};
+    u08
+        SaveState_Magic[5] = {'p', 't', 's', 'x', 8};
 
 global_variable
-u08
-SaveState_Magic_Tail_Auto = 2;
+    u08
+        SaveState_Magic_Tail_Auto = 2;
 
 global_variable
-u08
-SaveState_Magic_Tail_Manual = 3;
+    u08
+        SaveState_Magic_Tail_Manual = 3;
 
 global_function
-u08
-SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
+    u08
+    SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
 {
     if (!path)
     {
@@ -8262,7 +8350,7 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
             SetSaveStatePaths();
         }
     }
-    
+
     if (path || SaveState_Path)
     {
         if (!path)
@@ -8274,7 +8362,7 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
                 *(SaveState_Name + index) = c;
             }
         }
-        
+
         u32 nEdits = Min(Edits_Stack_Size, Map_Editor->nEdits);
         u32 nWayp = Waypoint_Editor->nWaypointsActive;
 
@@ -8283,11 +8371,11 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
         {
             switch (node->type)
             {
-                case extension_graph:
-                    {
-                        ++nGraphPlots;
-                    }
-                    break;
+            case extension_graph:
+            {
+                ++nGraphPlots;
+            }
+            break;
             }
         }
 
@@ -8295,10 +8383,12 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
         u32 nMetaFlags = 0;
         ForLoop(Contigs->numberOfContigs)
         {
-            if ((Contigs->contigs + index)->scaffId) ++nScaffs;
-            if (*(Contigs->contigs + index)->metaDataFlags) ++nMetaFlags;
+            if ((Contigs->contigs + index)->scaffId)
+                ++nScaffs;
+            if (*(Contigs->contigs + index)->metaDataFlags)
+                ++nMetaFlags;
         }
-        
+
         u08 nMetaTags = 0;
         u32 totalMetaTagSpace = 0;
         ForLoop(ArrayCount(Meta_Data->tags))
@@ -8319,7 +8409,7 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
         {
             u08 settings = (u08)Current_Theme;
             *fileWriter++ = settings;
-           
+
             settings = 0;
             settings |= Waypoints_Always_Visible ? (1 << 0) : 0;
             settings |= Contig_Name_Labels->on ? (1 << 1) : 0;
@@ -8332,7 +8422,7 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
 
             *fileWriter++ = settings;
         }
-        
+
         // colours
         {
             ForLoop(32)
@@ -8434,22 +8524,22 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
 
         // edits
         {
-            //undo-sort for sort meta data tags
-            // ForLoop(2)
-            // {
-            //     *fileWriter++ = ((u08 *)&sortMetaEdits)[index];
-            // }
+            // undo-sort for sort meta data tags
+            //  ForLoop(2)
+            //  {
+            //      *fileWriter++ = ((u08 *)&sortMetaEdits)[index];
+            //  }
 
             ForLoop(4)
             {
                 *fileWriter++ = ((u08 *)&nEdits)[index];
             }
 
-            //to store sort meta tags edits
-            // ForLoop(2)
-            // {
-            //     *fileWriter++ = ((u08 *)&sortMetaEdits)[index];
-            // }
+            // to store sort meta tags edits
+            //  ForLoop(2)
+            //  {
+            //      *fileWriter++ = ((u08 *)&sortMetaEdits)[index];
+            //  }
 
             u32 editStackPtr = Map_Editor->editStackPtr == nEdits ? 0 : Map_Editor->editStackPtr;
             u32 nContigFlags = (nEdits + 7) >> 3;
@@ -8462,7 +8552,7 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
                 {
                     editStackPtr = 0;
                 }
-                
+
                 map_edit *edit = Map_Editor->edits + editStackPtr;
                 u32 x = (u32)((s32)edit->finalPix1 - edit->delta);
                 u32 y = (u32)((s32)edit->finalPix2 - edit->delta);
@@ -8554,7 +8644,7 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
         {
             memcpy(fileWriter, (const void *)&MetaData_Active_Tag, sizeof(MetaData_Active_Tag));
             fileWriter += sizeof(MetaData_Active_Tag);
-            
+
             memcpy(fileWriter, (const void *)MetaData_Mode_Data, sizeof(meta_mode_data));
             fileWriter += sizeof(meta_mode_data);
 
@@ -8603,19 +8693,19 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
             {
                 switch (node->type)
                 {
-                    case extension_graph:
-                        {
-                            graph *gph = (graph *)node->extension;
-                            ForLoop(32)
-                            {
-                                *fileWriter++ = ((u08 *)gph)[index + 88];
-                            }
-                        }
-                        break;
+                case extension_graph:
+                {
+                    graph *gph = (graph *)node->extension;
+                    ForLoop(32)
+                    {
+                        *fileWriter++ = ((u08 *)gph)[index + 88];
+                    }
+                }
+                break;
                 }
             }
         }
-    
+
         u32 nBytesComp = nFileBytes + 128;
         u08 *compBuff = PushArrayP(Loading_Arena, u08, nBytesComp);
         u32 nCommpressedBytes = 0;
@@ -8634,11 +8724,12 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
                 if ((file = fopen((const char *)path, "rb")))
                 {
                     fclose(file);
-                    return(1);
+                    return (1);
                 }
             }
 
-            if (!(file = fopen((const char *)path, "wb"))) return(1);
+            if (!(file = fopen((const char *)path, "wb")))
+                return (1);
 
             fwrite(SaveState_Magic, 1, sizeof(SaveState_Magic), file);
             fwrite(&SaveState_Magic_Tail_Manual, 1, 1, file);
@@ -8650,7 +8741,7 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
             fwrite(SaveState_Magic, 1, sizeof(SaveState_Magic), file);
             fwrite(&SaveState_Magic_Tail_Auto, 1, 1, file);
         }
-        
+
         fwrite(&nCommpressedBytes, 1, 4, file);
         fwrite(&nFileBytes, 1, 4, file);
         fwrite(compBuff, 1, nCommpressedBytes, file);
@@ -8677,12 +8768,12 @@ SaveState(u64 headerHash, char *path = 0, u08 overwrite = 0)
         }
     }
 
-    return(0);
+    return (0);
 }
 
 global_function
-u08
-LoadState(u64 headerHash, char *path)
+    u08
+    LoadState(u64 headerHash, char *path)
 {
     u08 oldStyle = 0;
     // u08 newStyle = 0;
@@ -8691,12 +8782,12 @@ LoadState(u64 headerHash, char *path)
     {
         SetSaveStatePaths();
     }
-    
+
     if (path || SaveState_Path)
     {
         FILE *file = 0;
         u08 fullLoad = 1;
-        
+
         if (path)
         {
             if ((file = fopen((const char *)path, "rb")))
@@ -8834,7 +8925,6 @@ LoadState(u64 headerHash, char *path)
                                 file = 0;
                             }
                         }
-
                     }
                     else
                     {
@@ -8844,7 +8934,7 @@ LoadState(u64 headerHash, char *path)
                 }
             }
         }
-        
+
         if (file)
         {
             u32 nBytesComp;
@@ -8862,7 +8952,7 @@ LoadState(u64 headerHash, char *path)
             {
                 FreeLastPushP(Loading_Arena); // comp buffer
                 FreeLastPushP(Loading_Arena); // fileContents
-                return(1);
+                return (1);
             }
             FreeLastPushP(Loading_Arena); // comp buffer
 
@@ -9002,35 +9092,35 @@ LoadState(u64 headerHash, char *path)
 
                 // edits
                 {
-                    u32 nEdits  = Min(Edits_Stack_Size, Map_Editor->nEdits);
+                    u32 nEdits = Min(Edits_Stack_Size, Map_Editor->nEdits);
                     ForLoop(nEdits) UndoMapEdit();
-                    
-                    //undo-sort for sort meta data tags
-                    // if(newStyle)
-                    // {
-                    //     ForLoop(2)
-                    //     {
-                    //         ((u08 *)&sortMetaEdits)[index] = *fileContents++;
-                    //     } 
-                    //     nBytesRead += 2;
-                    // }
 
-                    ForLoop(4) ((u08 *)&nEdits)[index] = *fileContents++;
+                    // undo-sort for sort meta data tags
+                    //  if(newStyle)
+                    //  {
+                    //      ForLoop(2)
+                    //      {
+                    //          ((u08 *)&sortMetaEdits)[index] = *fileContents++;
+                    //      }
+                    //      nBytesRead += 2;
+                    //  }
+
+                    ForLoop(4)((u08 *)&nEdits)[index] = *fileContents++;
                     nBytesRead += 4;
-                    
-                    //load sort meta edits 
-                    // try
-                    // {
-                    //     if(!oldStyle)
-                    //     {
-                    //         ForLoop(2) ((u08 *)&sortMetaEdits)[index] = *fileContents++;
-                    //         nBytesRead += 2;
-                    //     }
-                    // }
-                    // catch(...)
-                    // {
-                    //     printf("Error loading the Edits!!");
-                    // }
+
+                    // load sort meta edits
+                    //  try
+                    //  {
+                    //      if(!oldStyle)
+                    //      {
+                    //          ForLoop(2) ((u08 *)&sortMetaEdits)[index] = *fileContents++;
+                    //          nBytesRead += 2;
+                    //      }
+                    //  }
+                    //  catch(...)
+                    //  {
+                    //      printf("Error loading the Edits!!");
+                    //  }
 
                     u08 *contigFlags = fileContents + (12 * nEdits);
                     u32 nContigFlags = ((u32)nEdits + 7) >> 3;
@@ -9056,14 +9146,15 @@ LoadState(u64 headerHash, char *path)
 
                         u32 byte = (index + 1) >> 3;
                         u32 bit = (index + 1) & 7;
-                        u32 invert  = contigFlags[byte] & (1 << bit);
+                        u32 invert = contigFlags[byte] & (1 << bit);
 
                         pointui startPixels = {x, y};
                         s32 delta = d;
                         pointui finalPixels = {(u32)((s32)startPixels.x + delta), (u32)((s32)startPixels.y + delta)};
 
                         RearrangeMap(startPixels.x, startPixels.y, delta);
-                        if (invert) InvertMap(finalPixels.x, finalPixels.y);
+                        if (invert)
+                            InvertMap(finalPixels.x, finalPixels.y);
 
                         AddMapEdit(delta, finalPixels, invert);
                     }
@@ -9102,7 +9193,8 @@ LoadState(u64 headerHash, char *path)
                         ((u08 *)&z)[1] = *fileContents++;
                         ((u08 *)&z)[2] = *fileContents++;
                         ((u08 *)&z)[3] = *fileContents++;
-                        if(!oldStyle) isvert = *fileContents++;
+                        if (!oldStyle)
+                            isvert = *fileContents++;
                         u08 id = *fileContents++;
 
                         oldStyle ? AddWayPoint({x, y}) : AddWayPoint({x, y}, isvert);
@@ -9123,7 +9215,7 @@ LoadState(u64 headerHash, char *path)
 
                     nBytesRead += 4;
 
-                    ForLoop(Contigs->numberOfContigs) (Contigs->contigs + index)->scaffId = 0;
+                    ForLoop(Contigs->numberOfContigs)(Contigs->contigs + index)->scaffId = 0;
 
                     ForLoop(nScaffs)
                     {
@@ -9157,7 +9249,7 @@ LoadState(u64 headerHash, char *path)
                     nBytesRead += sizeof(meta_mode_data);
 
                     u32 nMetaFlags;
-                    if(oldStyle)
+                    if (oldStyle)
                     {
                         ((u08 *)&nMetaFlags)[0] = *fileContents++;
                         ((u08 *)&nMetaFlags)[1] = *fileContents++;
@@ -9196,8 +9288,10 @@ LoadState(u64 headerHash, char *path)
                         nBytesRead += 12;
 
                         u32 pixel = 0;
-                        while ((pixel < Number_of_Pixels_1D) && (Map_State->contigIds[pixel] != cId)) ++pixel;
-                        while ((pixel < Number_of_Pixels_1D) && (Map_State->contigIds[pixel] == cId)) Map_State->metaDataFlags[pixel++] = flags;
+                        while ((pixel < Number_of_Pixels_1D) && (Map_State->contigIds[pixel] != cId))
+                            ++pixel;
+                        while ((pixel < Number_of_Pixels_1D) && (Map_State->contigIds[pixel] == cId))
+                            Map_State->metaDataFlags[pixel++] = flags;
                     }
                     UpdateContigsFromMapState();
 
@@ -9221,18 +9315,19 @@ LoadState(u64 headerHash, char *path)
                     {
                         switch (node->type)
                         {
-                            case extension_graph:
-                                {
-                                    if ((nBytesRead + 32) > nBytesFile) break;
-
-                                    ForLoop(32)
-                                    {
-                                        ((u08 *)node->extension)[index + 88] = *fileContents++;
-                                    }
-
-                                    nBytesRead += 32;
-                                }
+                        case extension_graph:
+                        {
+                            if ((nBytesRead + 32) > nBytesFile)
                                 break;
+
+                            ForLoop(32)
+                            {
+                                ((u08 *)node->extension)[index + 88] = *fileContents++;
+                            }
+
+                            nBytesRead += 32;
+                        }
+                        break;
                         }
                     }
                 }
@@ -9243,20 +9338,17 @@ LoadState(u64 headerHash, char *path)
         }
     }
 
-    return(0);
+    return (0);
 }
 
-//User Profile
-global_variable
-u08 *
-UserSaveState_Path = 0;
+// User Profile
+global_variable u08 *
+    UserSaveState_Path = 0;
 
-global_variable
-u08 *
-UserSaveState_Name = 0;
+global_variable u08 *
+    UserSaveState_Name = 0;
 
-global_function
-void
+global_function void
 UserSetSaveStatePaths()
 {
     if (!UserSaveState_Path)
@@ -9276,16 +9368,21 @@ UserSetSaveStatePaths()
         else
         {
             path = getenv("HOME");
-            if (!path) path = getpwuid(getuid())->pw_dir;
+            if (!path)
+                path = getpwuid(getuid())->pw_dir;
             folder = (char *)".config";
             folder2 = (char *)"PretextView";
         }
 
         if (path)
         {
-            while ((*buff++ = *path++)) {}
+            while ((*buff++ = *path++))
+            {
+            }
             *(buff - 1) = sep;
-            while ((*buff++ = *folder++)) {}
+            while ((*buff++ = *folder++))
+            {
+            }
 
             mkdir((char *)buff_, 0700);
             struct stat st = {};
@@ -9297,7 +9394,9 @@ UserSetSaveStatePaths()
                 if (folder2)
                 {
                     *(buff - 1) = sep;
-                    while ((*buff++ = *folder2++)) {}
+                    while ((*buff++ = *folder2++))
+                    {
+                    }
 
                     mkdir((char *)buff_, 0700);
                     if (!stat((char *)buff_, &st))
@@ -9309,8 +9408,8 @@ UserSetSaveStatePaths()
                 {
                     goodPath = 1;
                 }
-            } 
-            
+            }
+
             if (goodPath)
             {
                 u32 n = StringLength((u08 *)buff_);
@@ -9328,165 +9427,35 @@ UserSetSaveStatePaths()
         if (SUCCEEDED(hres))
         {
             PWSTR pathPtr = path;
-            while ((*buff++ = *pathPtr++)) {}
+            while ((*buff++ = *pathPtr++))
+            {
+            }
             *(buff - 1) = sep;
             char *folder = (char *)"PretextView";
-            while ((*buff++ = *folder++)) {}
+            while ((*buff++ = *folder++))
+            {
+            }
 
             if (CreateDirectory((char *)buff_, NULL) || ERROR_ALREADY_EXISTS == GetLastError())
             {
-                u32 n = StringLength((u08*)buff_);
+                u32 n = StringLength((u08 *)buff_);
                 UserSaveState_Path = PushArray(Working_Set, u08, n + 18);
-                CopyNullTerminatedString((u08*)buff_, UserSaveState_Path);
+                CopyNullTerminatedString((u08 *)buff_, UserSaveState_Path);
                 UserSaveState_Path[n] = (u08)sep;
                 UserSaveState_Name = UserSaveState_Path + n + 1;
                 UserSaveState_Path[n + 17] = 0;
             }
         }
 
-        if (path) CoTaskMemFree(path);
+        if (path)
+            CoTaskMemFree(path);
 #endif
     }
 }
 
-
-// global_function
-// void
-// UserSetSaveStatePaths()
-// {
-//     if (!UserSaveState_Path)
-//     {
-//         char buff_[64];
-//         char *buff = (char *)buff_;
-// #ifndef _WIN32
-//         char sep = '/';
-//         const char *path = getenv("XDG_CONFIG_HOME");
-//         char *folder;
-//         char *folder2;
-//         char *userprofile = (char *)"userprofile";  // New folder name
-
-//         if (path)
-//         {
-//             folder = (char *)"PretextView";
-//             folder2 = 0;
-//         }
-//         else
-//         {
-//             path = getenv("HOME");
-//             if (!path) path = getpwuid(getuid())->pw_dir;
-//             folder = (char *)".config";
-//             folder2 = (char *)"PretextView";
-//         }
-
-//         if (path)
-//         {
-//             while ((*buff++ = *path++)) {}
-//             *(buff - 1) = sep;
-//             while ((*buff++ = *folder++)) {}
-
-//             mkdir((char *)buff_, 0700);
-//             struct stat st = {};
-
-//             u32 goodPath = 0;
-
-//             if (!stat((char *)buff_, &st))
-//             {
-//                 if (folder2)
-//                 {
-//                     *(buff - 1) = sep;
-//                     while ((*buff++ = *folder2++)) {}
-
-//                     mkdir((char *)buff_, 0700);
-//                     if (!stat((char *)buff_, &st))
-//                     {
-//                         *(buff - 1) = sep;
-//                         while ((*buff++ = *userprofile++)) {}  // Create userprofile folder
-
-//                         mkdir((char *)buff_, 0700);
-//                         if (!stat((char *)buff_, &st))
-//                         {
-//                             goodPath = 1;
-//                         }
-//                     }
-//                 }
-//                 else
-//                 {
-//                     *(buff - 1) = sep;
-//                     while ((*buff++ = *userprofile++)) {}  // Create userprofile folder
-
-//                     mkdir((char *)buff_, 0700);
-//                     if (!stat((char *)buff_, &st))
-//                     {
-//                         goodPath = 1;
-//                     }
-//                 }
-//             }
-
-//             if (goodPath)
-//             {
-//                 u32 n = StringLength((u08 *)buff_);
-//                 UserSaveState_Path = PushArray(Working_Set, u08, n + 18);
-//                 CopyNullTerminatedString((u08 *)buff_, UserSaveState_Path);
-//                 UserSaveState_Path[n] = (u08)sep;
-//                 UserSaveState_Name = UserSaveState_Path + n + 1;
-//                 UserSaveState_Path[n + 17] = 0;
-//             }
-//         }
-// #else
-//         PWSTR path = 0;
-//         char sep = '\\';
-//         HRESULT hres = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, 0, &path);
-//         if (SUCCEEDED(hres))
-//         {
-//             PWSTR pathPtr = path;
-//             while ((*buff++ = *pathPtr++)) {}
-//             *(buff - 1) = sep;
-//             char *folder = (char *)"PretextView";
-//             while ((*buff++ = *folder++)) {}
-
-//             if (CreateDirectory((char *)buff_, NULL) || ERROR_ALREADY_EXISTS == GetLastError())
-//             {
-//                 *(buff - 1) = sep;
-//                 char *userprofile = (char *)"userprofile";  // New folder name
-//                 while ((*buff++ = *userprofile++)) {}  // Create userprofile folder
-
-//                 if (CreateDirectory((char *)buff_, NULL) || ERROR_ALREADY_EXISTS == GetLastError())
-//                 {
-//                     u32 n = StringLength((u08 *)buff_);
-//                     UserSaveState_Path = PushArray(Working_Set, u08, n + 18);
-//                     CopyNullTerminatedString((u08 *)buff_, UserSaveState_Path);
-//                     UserSaveState_Path[n] = (u08)sep;
-//                     UserSaveState_Name = UserSaveState_Path + n + 1;
-//                     UserSaveState_Path[n + 17] = 0;
-//                 }
-//             }
-//         }
-
-//         if (path) CoTaskMemFree(path);
-// #endif
-//     }
-// }
-
-
-// global_variable
-// u08
-// UserSaveState_Magic[5] = {'p', 't', 's', 'x', 3};
-
-// global_variable
-// u08
-// UserSaveState_Magic_Tail_Auto = 2;
-
-// global_variable
-// u08
-// UserSaveState_Magic_Tail_Manual = 3;
-
-global_function
-u08
+global_function void
 UserSaveState(char *headerHash = "userprofile", u08 overwrite = 1, char *path = 0)
 {
-    // char tmpbuff[1024];
-    // strcpy(tmpbuff, "userprofile-");
-    // strcat(tmpbuff, headerHash);
 
     if (!UserSaveState_Path)
     {
@@ -9506,7 +9475,6 @@ UserSaveState(char *headerHash = "userprofile", u08 overwrite = 1, char *path = 
         if (file)
         {
             fclose(file);
-            return 1;  // File already exists, and overwrite is not allowed
         }
     }
 
@@ -9514,80 +9482,67 @@ UserSaveState(char *headerHash = "userprofile", u08 overwrite = 1, char *path = 
     FILE *file = fopen(path, "wb");
     if (!file)
     {
-        return 1;  // Failed to open file
+        return;
     }
-
 
     u16 ngphextensions = 0;
     TraverseLinkedList(Extensions.head, extension_node)
     {
         switch (node->type)
         {
-            case extension_graph:
-            {                    
-                graph *gph = (graph *)node->extension;
-                ngphextensions++;
-            }
+        case extension_graph:
+        {
+            graph *gph = (graph *)node->extension;
+            ngphextensions++;
+        }
         }
     }
     fwrite(&ngphextensions, sizeof(ngphextensions), 1, file);
 
-    //Specific color for each track
+    // Specific color for each track
     TraverseLinkedList(Extensions.head, extension_node)
     {
         switch (node->type)
         {
-            case extension_graph:
-            {
-                graph *gph = (graph *)node->extension;
-                // u32 *name = gph->name;
-                // u08 colour = (u08)gph->activecolor;
-                // fwrite(&name, sizeof(name), 1, file);
-                // fwrite(&colour, sizeof(colour), 1, file);
+        case extension_graph:
+        {
+            graph *gph = (graph *)node->extension;
 
-                // Get the name length and write it first
-                u32 name_len = strlen((char *)gph->name);
-                fwrite(&name_len, sizeof(name_len), 1, file);
+            // Get the name length and write it first
+            u32 name_len = strlen((char *)gph->name);
+            fwrite(&name_len, sizeof(name_len), 1, file);
 
-                // Write the name string data
-                fwrite(gph->name, sizeof(char), name_len, file);
+            // Write the name string data
+            fwrite(gph->name, sizeof(char), name_len, file);
 
-                // Write the color data
-                u08 colour = (u08)gph->activecolor;
-                fwrite(&colour, sizeof(colour), 1, file);
-            }
+            // Write the color data
+            u08 colour = (u08)gph->activecolor;
+            fwrite(&colour, sizeof(colour), 1, file);
+        }
         }
     }
 
-    //metadata tags color profile
+    // metadata tags color profile
     fwrite(&meta_data_curcolorProfile, sizeof(meta_data_curcolorProfile), 1, file);
 
-    //metadata tags outline
+    // metadata tags outline
     fwrite(&meta_outline->on, sizeof(meta_outline->on), 1, file);
 
-    //backgound color
+    // backgound color
     fwrite(&active_bgcolor, sizeof(active_bgcolor), 1, file);
 
-    // u08 waypointsVisible = (u08)Waypoints_Always_Visible;
-    // u08 contigLabels = (u08)Contig_Name_Labels->on;
-
-    // fwrite(&waypointsVisible, sizeof(waypointsVisible), 1, file);
-    // fwrite(&contigLabels, sizeof(contigLabels), 1, file);
+    // Save custom color map order
+    fwrite(&useCustomOrder, sizeof(useCustomOrder), 1, file);
+    fwrite(&userColourMapOrder.nMaps, sizeof(userColourMapOrder.nMaps), 1, file);
+    fwrite(userColourMapOrder.order, sizeof(u32), userColourMapOrder.nMaps, file);
 
     fclose(file);
-    return 0;  // Success
 }
 
-
-
 global_function
-u08
-UserLoadState(char *headerHash = "userprofile", char *path = 0)
+    u08
+    UserLoadState(char *headerHash = "userprofile", char *path = 0)
 {
-
-    // char tmpbuff[1024];
-    // strcpy(tmpbuff, "userprofile-");
-    // strcat(tmpbuff, headerHash);
 
     if (!UserSaveState_Path)
     {
@@ -9606,24 +9561,21 @@ UserLoadState(char *headerHash = "userprofile", char *path = 0)
     FILE *file = fopen(path, "rb");
     if (!file)
     {
-        return 1;  // Failed to open file
+        return 1; // Failed to open file
     }
 
-    // Read user profile settings 
-    // u08 activecolor;
-    // fread(&activecolor, sizeof(activecolor), 1, file);
-    // activeGraphColour = (u08)activecolor;
+    // Read user profile settings
     TraverseLinkedList(Extensions.head, extension_node)
     {
         switch (node->type)
         {
-            case extension_graph:
-            {
-                graph *gph = (graph *)node->extension;
-                
-                gph->colour = graphColors[activeGraphColour];
-            }
-            break;
+        case extension_graph:
+        {
+            graph *gph = (graph *)node->extension;
+
+            gph->colour = graphColors[activeGraphColour];
+        }
+        break;
         }
     }
     // u08 waypointsVisible;
@@ -9637,83 +9589,90 @@ UserLoadState(char *headerHash = "userprofile", char *path = 0)
     ForLoop(ngphextensions)
     {
         u32 name_len;
-        if (fread(&name_len, sizeof(name_len), 1, file) != 1) {
-            break; 
+        if (fread(&name_len, sizeof(name_len), 1, file) != 1)
+        {
+            break;
         }
 
-        char *name = (char *)malloc(name_len + 1); 
-        if (fread(name, sizeof(char), name_len, file) != name_len) {
+        char *name = (char *)malloc(name_len + 1);
+        if (fread(name, sizeof(char), name_len, file) != name_len)
+        {
             free(name);
             break;
         }
         name[name_len] = '\0';
 
         u08 colour;
-        if (fread(&colour, sizeof(colour), 1, file) != 1) {
+        if (fread(&colour, sizeof(colour), 1, file) != 1)
+        {
             free(name);
             break;
         }
 
         // Search for the graph in the current list and update its color
-        TraverseLinkedList(Extensions.head, extension_node) {
-            switch (node->type) {
-                case extension_graph: {
-                    graph *gph = (graph *)node->extension;
+        TraverseLinkedList(Extensions.head, extension_node)
+        {
+            switch (node->type)
+            {
+            case extension_graph:
+            {
+                graph *gph = (graph *)node->extension;
 
-    
-                    if (strcmp((char *)gph->name, name) == 0) {
-                        gph->activecolor = colour;
-                        gph->colour = graphColors[gph->activecolor]; 
-                        break;
-                    }
+                if (strcmp((char *)gph->name, name) == 0)
+                {
+                    gph->activecolor = colour;
+                    gph->colour = graphColors[gph->activecolor];
+                    break;
                 }
+            }
             }
         }
 
         free(name);
-        
     }
 
-    //metadata tags color profile
+    // metadata tags color profile
     fread(&meta_data_curcolorProfile, sizeof(meta_data_curcolorProfile), 1, file);
-    
-    //metadata tags outline
+
+    // metadata tags outline
     fread(&meta_outline->on, sizeof(meta_outline->on), 1, file);
 
-    //background color
+    // background color
     fread(&active_bgcolor, sizeof(active_bgcolor), 1, file);
 
+    // Load custom color map order
+    fread(&useCustomOrder, sizeof(useCustomOrder), 1, file);
+    fread(&userColourMapOrder.nMaps, sizeof(userColourMapOrder.nMaps), 1, file);
+    fread(userColourMapOrder.order, sizeof(u32), userColourMapOrder.nMaps, file);
+
     fclose(file);
-    return 0;  // Success
+    return 0; // Success
 }
 
-
+global_variable
+    u32
+        Global_Text_Buffer[1024] = {0};
 
 global_variable
-u32
-Global_Text_Buffer[1024] = {0};
+    u32
+        Global_Text_Buffer_Ptr = 0;
 
-global_variable
-u32
-Global_Text_Buffer_Ptr = 0;
-
-global_function
-void
-TextInput(GLFWwindow* window, u32 codepoint)
+global_function void
+TextInput(GLFWwindow *window, u32 codepoint)
 {
     if (!GatheringTextInput)
     {
         (void)window;
-        
+
         Global_Text_Buffer[Global_Text_Buffer_Ptr++] = codepoint;
-        
-        if (Global_Text_Buffer_Ptr == ArrayCount(Global_Text_Buffer)) Global_Text_Buffer_Ptr = 0;
-        //nk_input_unicode(NK_Context, codepoint); 
+
+        if (Global_Text_Buffer_Ptr == ArrayCount(Global_Text_Buffer))
+            Global_Text_Buffer_Ptr = 0;
+        // nk_input_unicode(NK_Context, codepoint);
     }
 }
 
-global_function
-void
+global_function void
 CopyEditsToClipBoard(GLFWwindow *window)
 {
     u32 nEdits = Min(Edits_Stack_Size, Map_Editor->nEdits);
@@ -9748,20 +9707,19 @@ CopyEditsToClipBoard(GLFWwindow *window)
             u32 *newName = (Original_Contigs + Map_State->originalContigIds[to])->name;
 
             bufferPtr += (u32)stbsp_snprintf((char *)buffer + bufferPtr, (s32)(bufferSize - bufferPtr), "Edit %d:\n       %s[%$.2fbp] to %s[%$.2fbp]\n%s\n       %s[%$.2fbp]\n",
-                    index + 1, (char *)name1, (f64)oldFrom * bpPerPixel, (char *)name2, (f64)oldTo * bpPerPixel,
-                    edit->finalPix1 > edit->finalPix2 ? (const char *)"       inverted and moved to" : (const char *)"       moved to",
-                    (char *)newName, (f64)Map_State->contigRelCoords[to] * bpPerPixel);
+                                             index + 1, (char *)name1, (f64)oldFrom * bpPerPixel, (char *)name2, (f64)oldTo * bpPerPixel,
+                                             edit->finalPix1 > edit->finalPix2 ? (const char *)"       inverted and moved to" : (const char *)"       moved to",
+                                             (char *)newName, (f64)Map_State->contigRelCoords[to] * bpPerPixel);
         }
 
         buffer[bufferPtr] = 0;
         glfwSetClipboardString(window, (const char *)buffer);
-        
+
         FreeLastPush(Working_Set); // buffer
     }
 }
 
-global_function
-void
+global_function void
 GenerateAGP(char *path, u08 overwrite, u08 formatSingletons, u08 preserveOrder)
 {
     FILE *file;
@@ -9789,11 +9747,12 @@ GenerateAGP(char *path, u08 overwrite, u08 formatSingletons, u08 preserveOrder)
         u32 scaffPart = 0;
 
         u32 scaffId_unPainted = 0;
-        if (preserveOrder) ForLoop(Contigs->numberOfContigs) scaffId_unPainted = Max(scaffId_unPainted, (Contigs->contigs + index)->scaffId);
+        if (preserveOrder)
+            ForLoop(Contigs->numberOfContigs) scaffId_unPainted = Max(scaffId_unPainted, (Contigs->contigs + index)->scaffId);
 
-        for (   u08 type = 0;
-                type < (preserveOrder ? 1 : 2);
-                ++type)
+        for (u08 type = 0;
+             type < (preserveOrder ? 1 : 2);
+             ++type)
         {
             ForLoop(Contigs->numberOfContigs)
             {
@@ -9802,7 +9761,7 @@ GenerateAGP(char *path, u08 overwrite, u08 formatSingletons, u08 preserveOrder)
                 u32 startCoord = cont->startCoord - (invert ? (cont->length - 1) : 0);
 
                 invert = (!formatSingletons && (!cont->scaffId || (index && (index < (Contigs->numberOfContigs - 1)) && (cont->scaffId != ((cont + 1)->scaffId)) && (cont->scaffId != ((cont - 1)->scaffId))) || (!index && (cont->scaffId != ((cont + 1)->scaffId))) || ((index == (Contigs->numberOfContigs - 1)) && (cont->scaffId != ((cont - 1)->scaffId))))) ? 0 : invert;
-                
+
                 u64 contRealStartCoord = (u64)((f64)startCoord / (f64)Number_of_Pixels_1D * (f64)Total_Genome_Length) + 1;
                 u64 contRealEndCoord = (u64)((f64)(startCoord + cont->length) / (f64)Number_of_Pixels_1D * (f64)Total_Genome_Length);
                 u64 contRealSize = contRealEndCoord - contRealStartCoord + 1;
@@ -9870,40 +9829,40 @@ GenerateAGP(char *path, u08 overwrite, u08 formatSingletons, u08 preserveOrder)
     }
 }
 
-    // global_function
-    // void
-    // SortMapByMetaTags()
-    // {
-    //     u32 nPixelToConsider = Number_of_Pixels_1D;
-    //     sortMetaEdits = 0;
-    //     for (;;)
-    //     {
-    //         u64 maxFlag = 0;
-    //         ForLoop(nPixelToConsider) maxFlag = Max(maxFlag, Map_State->metaDataFlags[index]);
-    //         if (!maxFlag) break;
+// global_function
+// void
+// SortMapByMetaTags()
+// {
+//     u32 nPixelToConsider = Number_of_Pixels_1D;
+//     sortMetaEdits = 0;
+//     for (;;)
+//     {
+//         u64 maxFlag = 0;
+//         ForLoop(nPixelToConsider) maxFlag = Max(maxFlag, Map_State->metaDataFlags[index]);
+//         if (!maxFlag) break;
 
-    //         ForLoop(nPixelToConsider)
-    //         {
-    //             u32 pixelEnd = nPixelToConsider - index - 1;
-    //             s32 delta = (s32)(Number_of_Pixels_1D - pixelEnd - 1);
-    //             if (Map_State->metaDataFlags[pixelEnd] == maxFlag)
-    //             {
-    //                 u32 pixelStart = pixelEnd;
-    //                 while (pixelStart && Map_State->metaDataFlags[pixelStart - 1] == maxFlag) --pixelStart;
-                    
-    //                 if (delta)
-    //                 {
-    //                     RearrangeMap(pixelStart, pixelEnd, delta);
-    //                     AddMapEdit(delta, {(u32)((s32)pixelStart + delta), (u32)((s32)pixelEnd + delta)}, 0);
-    //                     sortMetaEdits++;
-    //                 }
+//         ForLoop(nPixelToConsider)
+//         {
+//             u32 pixelEnd = nPixelToConsider - index - 1;
+//             s32 delta = (s32)(Number_of_Pixels_1D - pixelEnd - 1);
+//             if (Map_State->metaDataFlags[pixelEnd] == maxFlag)
+//             {
+//                 u32 pixelStart = pixelEnd;
+//                 while (pixelStart && Map_State->metaDataFlags[pixelStart - 1] == maxFlag) --pixelStart;
 
-    //                 nPixelToConsider -= (pixelEnd - pixelStart + 1);
-    //                 break;
-    //             }
-    //         }
-    //     }
-    // }
+//                 if (delta)
+//                 {
+//                     RearrangeMap(pixelStart, pixelEnd, delta);
+//                     AddMapEdit(delta, {(u32)((s32)pixelStart + delta), (u32)((s32)pixelEnd + delta)}, 0);
+//                     sortMetaEdits++;
+//                 }
+
+//                 nPixelToConsider -= (pixelEnd - pixelStart + 1);
+//                 break;
+//             }
+//         }
+//     }
+// }
 
 void SortMapByMetaTags(u64 tagMask)
 {
@@ -9913,7 +9872,7 @@ void SortMapByMetaTags(u64 tagMask)
     {
         u64 maxFlag = 0;
         bool hasRelevantFlags = false;
-        ForLoop(nPixelToConsider) 
+        ForLoop(nPixelToConsider)
         {
             u64 relevantFlags = Map_State->metaDataFlags[index] & tagMask;
             if (relevantFlags)
@@ -9922,7 +9881,8 @@ void SortMapByMetaTags(u64 tagMask)
                 hasRelevantFlags = true;
             }
         }
-        if (!hasRelevantFlags) break;
+        if (!hasRelevantFlags)
+            break;
 
         ForLoop(nPixelToConsider)
         {
@@ -9932,7 +9892,7 @@ void SortMapByMetaTags(u64 tagMask)
             if (relevantFlags == maxFlag)
             {
                 u32 pixelStart = pixelEnd;
-                while (pixelStart && ((Map_State->metaDataFlags[pixelStart - 1] & tagMask) == maxFlag)) 
+                while (pixelStart && ((Map_State->metaDataFlags[pixelStart - 1] & tagMask) == maxFlag))
                     --pixelStart;
                 if (delta)
                 {
@@ -9946,7 +9906,6 @@ void SortMapByMetaTags(u64 tagMask)
         }
     }
 }
-
 
 MainArgs
 {
@@ -9982,7 +9941,7 @@ MainArgs
     Camera_Position.z = 1.0f;
 
     CreateMemoryArena(Working_Set, MegaByte(256));
-    Thread_Pool = ThreadPoolInit(&Working_Set, 3); 
+    Thread_Pool = ThreadPoolInit(&Working_Set, 3);
 
     glfwSetErrorCallback(ErrorCallback);
     if (!glfwInit())
@@ -9999,7 +9958,7 @@ MainArgs
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_SAMPLES, 8);
 
-    GLFWwindow* window = glfwCreateWindow(1080, 1080, "PretextView", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(1080, 1080, "PretextView", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -10033,14 +9992,14 @@ MainArgs
 #ifdef DEBUG
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback( MessageCallback, 0 );
+    glDebugMessageCallback(MessageCallback, 0);
 #endif
 
     s32 width, height, display_width, display_height;
     glfwGetWindowSize(window, &width, &height);
     glfwGetFramebufferSize(window, &display_width, &display_height);
-    Screen_Scale.x = (f32)display_width/(f32)width;
-    Screen_Scale.y = (f32)display_height/(f32)height;
+    Screen_Scale.x = (f32)display_width / (f32)width;
+    Screen_Scale.y = (f32)display_height / (f32)height;
 
     // Cursors
     GLFWcursor *arrowCursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
@@ -10079,15 +10038,18 @@ MainArgs
         FileBrowserInit(&loadBrowser, &media);
         FileBrowserInit(&saveAGPBrowser, &media);
     }
-    
+
     {
         f64 mousex, mousey;
         glfwGetCursorPos(window, &mousex, &mousey);
         MouseMove(window, mousex, mousey);
     }
-    
+
     UserLoadState("userprofile", 0);
     Redisplay = 1;
+
+    InitializeColorMapOrder();
+
     char searchbuf[256] = {0};
     while (!glfwWindowShouldClose(window))
     {
@@ -10096,12 +10058,14 @@ MainArgs
             Render();
             glfwSwapBuffers(window);
             Redisplay = 0;
-            if (currFileName) SaveState(headerHash);
+            if (currFileName)
+                SaveState(headerHash);
         }
 
         if (Loading)
         {
-            if (currFileName) SaveState(headerHash);
+            if (currFileName)
+                SaveState(headerHash);
             LoadFile((const char *)currFile, Loading_Arena, (char **)&currFileName, &headerHash);
             if (currFileName)
             {
@@ -10137,7 +10101,7 @@ MainArgs
                 nk_input_key(NK_Context, NK_KEY_CUT, glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS);
                 nk_input_key(NK_Context, NK_KEY_CUT, glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS);
                 nk_input_key(NK_Context, NK_KEY_SHIFT, 1);
-            } 
+            }
             else
             {
                 nk_input_key(NK_Context, NK_KEY_COPY, 0);
@@ -10145,7 +10109,7 @@ MainArgs
                 nk_input_key(NK_Context, NK_KEY_CUT, 0);
                 nk_input_key(NK_Context, NK_KEY_SHIFT, 0);
             }*/
-            
+
             nk_input_scroll(NK_Context, NK_Scroll);
             NK_Scroll.x = 0;
             NK_Scroll.y = 0;
@@ -10158,10 +10122,10 @@ MainArgs
             nk_input_button(NK_Context, NK_BUTTON_LEFT, (s32)x, (s32)y, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
             nk_input_button(NK_Context, NK_BUTTON_MIDDLE, (s32)x, (s32)y, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
             nk_input_button(NK_Context, NK_BUTTON_RIGHT, (s32)x, (s32)y, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
-          
+
             ForLoop(NK_Pressed_Keys_Ptr) nk_input_key(NK_Context, NK_Pressed_Keys[index], 1);
             NK_Pressed_Keys_Ptr = 0;
-            
+
             ForLoop(Global_Text_Buffer_Ptr) nk_input_unicode(NK_Context, Global_Text_Buffer[index]);
             Global_Text_Buffer_Ptr = 0;
 
@@ -10188,7 +10152,7 @@ MainArgs
                     bounds.w /= 8;
                     bounds.h /= 8;
                     if (nk_contextual_begin(NK_Context, 0, nk_vec2(Screen_Scale.x * 300, Screen_Scale.y * 400), bounds))
-                    { 
+                    {
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
                         theme curr = Current_Theme;
                         ForLoop(THEME_COUNT)
@@ -10200,8 +10164,8 @@ MainArgs
                             SetTheme(NK_Context, curr);
                         }
 
-                        nk_contextual_end(NK_Context); 
-                    } 
+                        nk_contextual_end(NK_Context);
+                    }
 
                     nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 6);
                     showFileBrowser = nk_button_label(NK_Context, "Load Map");
@@ -10215,9 +10179,10 @@ MainArgs
                     showAboutScreen = nk_button_label(NK_Context, "About");
 
                     nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 4);
-                    
+
                     bounds = nk_widget_bounds(NK_Context);
-                    if ((nk_option_label(NK_Context, "Waypoint Edit Mode", Global_Mode == mode_waypoint_edit) ? 1 : 0) != (Global_Mode == mode_waypoint_edit ? 1 : 0)) Global_Mode = Global_Mode == mode_waypoint_edit ? mode_normal : mode_waypoint_edit;
+                    if ((nk_option_label(NK_Context, "Waypoint Edit Mode", Global_Mode == mode_waypoint_edit) ? 1 : 0) != (Global_Mode == mode_waypoint_edit ? 1 : 0))
+                        Global_Mode = Global_Mode == mode_waypoint_edit ? mode_normal : mode_waypoint_edit;
                     if (nk_contextual_begin(NK_Context, 0, nk_vec2(Screen_Scale.x * 750, Screen_Scale.y * 420), bounds))
                     {
                         struct nk_colorf colour_text = Waypoint_Mode_Data->text;
@@ -10241,10 +10206,14 @@ MainArgs
                         colour_bg = nk_color_picker(NK_Context, colour_bg, NK_RGBA);
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 4);
-                        if (nk_button_label(NK_Context, "Default")) colour_base = Red_Full;
-                        if (nk_button_label(NK_Context, "Default")) colour_select = Blue_Full;
-                        if (nk_button_label(NK_Context, "Default")) colour_text = Yellow_Text_Float;
-                        if (nk_button_label(NK_Context, "Default")) colour_bg = Grey_Background;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_base = Red_Full;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_select = Blue_Full;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_text = Yellow_Text_Float;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_bg = Grey_Background;
 
                         Waypoint_Mode_Data->text = colour_text;
                         Waypoint_Mode_Data->bg = colour_bg;
@@ -10254,13 +10223,15 @@ MainArgs
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
                         nk_label(NK_Context, "Size", NK_TEXT_CENTERED);
                         nk_slider_float(NK_Context, 1.0f, &Waypoint_Mode_Data->size, 2.0f * DefaultWaypointSize, 4.0f);
-                        if (nk_button_label(NK_Context, "Default")) Waypoint_Mode_Data->size = DefaultWaypointSize;
+                        if (nk_button_label(NK_Context, "Default"))
+                            Waypoint_Mode_Data->size = DefaultWaypointSize;
 
                         nk_contextual_end(NK_Context);
                     }
 
                     bounds = nk_widget_bounds(NK_Context);
-                    if ((nk_option_label(NK_Context, "Scaffold Edit Mode", Global_Mode == mode_scaff_edit) ? 1 : 0) != (Global_Mode == mode_scaff_edit ? 1 : 0)) Global_Mode = Global_Mode == mode_scaff_edit ? mode_normal : mode_scaff_edit;
+                    if ((nk_option_label(NK_Context, "Scaffold Edit Mode", Global_Mode == mode_scaff_edit) ? 1 : 0) != (Global_Mode == mode_scaff_edit ? 1 : 0))
+                        Global_Mode = Global_Mode == mode_scaff_edit ? mode_normal : mode_scaff_edit;
                     if (nk_contextual_begin(NK_Context, 0, nk_vec2(Screen_Scale.x * 300, Screen_Scale.y * 420), bounds))
                     {
                         struct nk_colorf colour_text = Scaff_Mode_Data->text;
@@ -10278,8 +10249,10 @@ MainArgs
                         colour_bg = nk_color_picker(NK_Context, colour_bg, NK_RGBA);
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 2);
-                        if (nk_button_label(NK_Context, "Default")) colour_text = Yellow_Text_Float;
-                        if (nk_button_label(NK_Context, "Default")) colour_bg = Grey_Background;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_text = Yellow_Text_Float;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_bg = Grey_Background;
 
                         Scaff_Mode_Data->text = colour_text;
                         Scaff_Mode_Data->bg = colour_bg;
@@ -10287,13 +10260,15 @@ MainArgs
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
                         nk_label(NK_Context, "Size", NK_TEXT_CENTERED);
                         nk_slider_float(NK_Context, 1.0f, &Scaff_Mode_Data->size, 2.0f * DefaultScaffSize, 4.0f);
-                        if (nk_button_label(NK_Context, "Default")) Scaff_Mode_Data->size = DefaultScaffSize;
+                        if (nk_button_label(NK_Context, "Default"))
+                            Scaff_Mode_Data->size = DefaultScaffSize;
 
                         nk_contextual_end(NK_Context);
                     }
 
                     bounds = nk_widget_bounds(NK_Context);
-                    if ((nk_option_label(NK_Context, "Edit Mode", Global_Mode == mode_edit) ? 1 : 0) != (Global_Mode == mode_edit ? 1 : 0)) Global_Mode = Global_Mode == mode_edit ? mode_normal : mode_edit;
+                    if ((nk_option_label(NK_Context, "Edit Mode", Global_Mode == mode_edit) ? 1 : 0) != (Global_Mode == mode_edit ? 1 : 0))
+                        Global_Mode = Global_Mode == mode_edit ? mode_normal : mode_edit;
                     if (nk_contextual_begin(NK_Context, 0, nk_vec2(Screen_Scale.x * 750, Screen_Scale.y * 400), bounds))
                     {
                         struct nk_colorf colour_text = Edit_Mode_Colours->fg;
@@ -10320,11 +10295,16 @@ MainArgs
                         colour_bg = nk_color_picker(NK_Context, colour_bg, NK_RGBA);
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 5);
-                        if (nk_button_label(NK_Context, "Default")) colour_preSelect = Green_Float;
-                        if (nk_button_label(NK_Context, "Default")) colour_select = Blue_Float;
-                        if (nk_button_label(NK_Context, "Default")) colour_invSelect = Red_Float;
-                        if (nk_button_label(NK_Context, "Default")) colour_text = Yellow_Text_Float;
-                        if (nk_button_label(NK_Context, "Default")) colour_bg = Grey_Background;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_preSelect = Green_Float;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_select = Blue_Float;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_invSelect = Red_Float;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_text = Yellow_Text_Float;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_bg = Grey_Background;
 
                         Edit_Mode_Colours->fg = colour_text;
                         Edit_Mode_Colours->bg = colour_bg;
@@ -10335,7 +10315,8 @@ MainArgs
                         nk_contextual_end(NK_Context);
                     }
 
-                    if ((nk_option_label(NK_Context, "Extension Mode", Global_Mode == mode_extension) ? 1 : 0) != (Global_Mode == mode_extension ? 1 : 0)) Global_Mode = Global_Mode == mode_extension ? mode_normal : mode_extension;
+                    if ((nk_option_label(NK_Context, "Extension Mode", Global_Mode == mode_extension) ? 1 : 0) != (Global_Mode == mode_extension ? 1 : 0))
+                        Global_Mode = Global_Mode == mode_extension ? mode_normal : mode_extension;
 
                     nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
                     Waypoints_Always_Visible = nk_check_label(NK_Context, "Waypoints Always Visible", (s32)Waypoints_Always_Visible) ? 1 : 0;
@@ -10360,8 +10341,10 @@ MainArgs
                         colour_bg = nk_color_picker(NK_Context, colour_bg, NK_RGBA);
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 2);
-                        if (nk_button_label(NK_Context, "Default")) colour_text = Yellow_Text_Float;
-                        if (nk_button_label(NK_Context, "Default")) colour_bg = Grey_Background;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_text = Yellow_Text_Float;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_bg = Grey_Background;
 
                         Contig_Name_Labels->fg = colour_text;
                         Contig_Name_Labels->bg = colour_bg;
@@ -10369,8 +10352,9 @@ MainArgs
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
                         nk_label(NK_Context, "Text Size", NK_TEXT_CENTERED);
                         nk_slider_float(NK_Context, 1.0f, &Contig_Name_Labels->size, 2.0f * DefaultNameLabelTextSize, 8.0f);
-                        if (nk_button_label(NK_Context, "Default")) Contig_Name_Labels->size = DefaultNameLabelTextSize;
-                        
+                        if (nk_button_label(NK_Context, "Default"))
+                            Contig_Name_Labels->size = DefaultNameLabelTextSize;
+
                         nk_contextual_end(NK_Context);
                     }
 
@@ -10393,8 +10377,10 @@ MainArgs
                         colour_bg = nk_color_picker(NK_Context, colour_bg, NK_RGBA);
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 2);
-                        if (nk_button_label(NK_Context, "Default")) colour_text = Red_Text_Float;
-                        if (nk_button_label(NK_Context, "Default")) colour_bg = Grey_Background;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_text = Red_Text_Float;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_bg = Grey_Background;
 
                         Scale_Bars->fg = colour_text;
                         Scale_Bars->bg = colour_bg;
@@ -10402,8 +10388,9 @@ MainArgs
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
                         nk_label(NK_Context, "Bar Size", NK_TEXT_CENTERED);
                         nk_slider_float(NK_Context, 10.0f, &Scale_Bars->size, 2.0f * DefaultScaleBarSize, 4.0f);
-                        if (nk_button_label(NK_Context, "Default")) Scale_Bars->size = DefaultScaleBarSize;
-                        
+                        if (nk_button_label(NK_Context, "Default"))
+                            Scale_Bars->size = DefaultScaleBarSize;
+
                         nk_contextual_end(NK_Context);
                     }
 
@@ -10420,15 +10407,17 @@ MainArgs
                         colour_bg = nk_color_picker(NK_Context, colour_bg, NK_RGBA);
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
-                        if (nk_button_label(NK_Context, "Default")) colour_bg = Grey_Background;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_bg = Grey_Background;
 
                         Grid->bg = colour_bg;
-                        
+
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
                         nk_label(NK_Context, "Grid Size", NK_TEXT_CENTERED);
                         nk_slider_float(NK_Context, 0, &Grid->size, 2.0f * DefaultGridSize, DefaultGridSize / 20.0f);
-                        if (nk_button_label(NK_Context, "Default")) Grid->size = DefaultGridSize;
-                        
+                        if (nk_button_label(NK_Context, "Default"))
+                            Grid->size = DefaultGridSize;
+
                         nk_contextual_end(NK_Context);
                     }
 
@@ -10439,8 +10428,9 @@ MainArgs
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
                         nk_label(NK_Context, "ID Bar Size", NK_TEXT_CENTERED);
                         nk_slider_float(NK_Context, 0, &Contig_Ids->size, 2.0f * DefaultContigIdSize, DefaultContigIdSize / 20.0f);
-                        if (nk_button_label(NK_Context, "Default")) Contig_Ids->size = DefaultContigIdSize;
-                        
+                        if (nk_button_label(NK_Context, "Default"))
+                            Contig_Ids->size = DefaultContigIdSize;
+
                         nk_contextual_end(NK_Context);
                     }
 
@@ -10458,7 +10448,8 @@ MainArgs
                         colour_bg = nk_color_picker(NK_Context, colour_bg, NK_RGBA);
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
-                        if (nk_button_label(NK_Context, "Default")) colour_bg = Grey_Background;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_bg = Grey_Background;
 
                         Tiles->bg = colour_bg;
 
@@ -10485,8 +10476,10 @@ MainArgs
                         colour_bg = nk_color_picker(NK_Context, colour_bg, NK_RGBA);
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 2);
-                        if (nk_button_label(NK_Context, "Default")) colour_text = Yellow_Text_Float;
-                        if (nk_button_label(NK_Context, "Default")) colour_bg = Grey_Background;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_text = Yellow_Text_Float;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_bg = Grey_Background;
 
                         Tool_Tip->fg = colour_text;
                         Tool_Tip->bg = colour_bg;
@@ -10494,7 +10487,8 @@ MainArgs
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
                         nk_label(NK_Context, "Text Size", NK_TEXT_CENTERED);
                         nk_slider_float(NK_Context, 1.0f, &Tool_Tip->size, 2.0f * DefaultToolTipTextSize, 8.0f);
-                        if (nk_button_label(NK_Context, "Default")) Tool_Tip->size = DefaultToolTipTextSize;
+                        if (nk_button_label(NK_Context, "Default"))
+                            Tool_Tip->size = DefaultToolTipTextSize;
 
                         nk_contextual_end(NK_Context);
                     }
@@ -10505,10 +10499,6 @@ MainArgs
                     Grey_Haplotigs = nk_check_label(NK_Context, "Grey out 'Haplotig'", (s32)Grey_Haplotigs) ? 1 : 0;
 
                     nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
-                    // if(nk_button_label(NK_Context, "userprofile 1")) 
-                    // {
-                    //     showUserProfileScreen = showUserProfileScreen ? 0 : 1;
-                    // }
 
                     nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
                     nk_label(NK_Context, "Gamma Min", NK_TEXT_LEFT);
@@ -10536,20 +10526,21 @@ MainArgs
                         Color_Maps->controlPoints[1] = 0.5f;
                         Color_Maps->controlPoints[2] = 1.0f;
                     }
-                   
+
                     if (slider1 || slider2 || slider3 || defaultGamma)
                     {
                         Color_Maps->controlPoints[1] = Min(Max(Color_Maps->controlPoints[1], Color_Maps->controlPoints[0]), Color_Maps->controlPoints[2]);
                         glUseProgram(Contact_Matrix->shaderProgram);
-                        glUniform3fv( Color_Maps->cpLocation, 1, Color_Maps->controlPoints);
+                        glUniform3fv(Color_Maps->cpLocation, 1, Color_Maps->controlPoints);
                     }
 
                     f32 ratio[] = {0.23f, 0.32f, NK_UNDEFINED};
                     nk_layout_row(NK_Context, NK_DYNAMIC, Screen_Scale.y * 30.0f, 3, ratio);
-                    
+
                     showMetaDataTagEditor = nk_button_label(NK_Context, "Meta Data Tags");
                     bounds = nk_widget_bounds(NK_Context);
-                    if ((nk_option_label(NK_Context, "MetaData Tag Mode", Global_Mode == mode_meta_edit) ? 1 : 0) != (Global_Mode == mode_meta_edit ? 1 : 0)) Global_Mode = Global_Mode == mode_meta_edit ? mode_normal : mode_meta_edit;
+                    if ((nk_option_label(NK_Context, "MetaData Tag Mode", Global_Mode == mode_meta_edit) ? 1 : 0) != (Global_Mode == mode_meta_edit ? 1 : 0))
+                        Global_Mode = Global_Mode == mode_meta_edit ? mode_normal : mode_meta_edit;
                     if (nk_contextual_begin(NK_Context, 0, nk_vec2(Screen_Scale.x * 300, Screen_Scale.y * 420), bounds))
                     {
                         struct nk_colorf colour_text = MetaData_Mode_Data->text;
@@ -10567,8 +10558,10 @@ MainArgs
                         colour_bg = nk_color_picker(NK_Context, colour_bg, NK_RGBA);
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 2);
-                        if (nk_button_label(NK_Context, "Default")) colour_text = Yellow_Text_Float;
-                        if (nk_button_label(NK_Context, "Default")) colour_bg = Grey_Background;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_text = Yellow_Text_Float;
+                        if (nk_button_label(NK_Context, "Default"))
+                            colour_bg = Grey_Background;
 
                         MetaData_Mode_Data->text = colour_text;
                         MetaData_Mode_Data->bg = colour_bg;
@@ -10576,28 +10569,20 @@ MainArgs
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
                         nk_label(NK_Context, "Size", NK_TEXT_CENTERED);
                         nk_slider_float(NK_Context, 1.0f, &MetaData_Mode_Data->size, 2.0f * DefaultMetaDataSize, 4.0f);
-                        if (nk_button_label(NK_Context, "Default")) MetaData_Mode_Data->size = DefaultMetaDataSize;
+                        if (nk_button_label(NK_Context, "Default"))
+                            MetaData_Mode_Data->size = DefaultMetaDataSize;
 
                         nk_contextual_end(NK_Context);
                     }
                     MetaData_Always_Visible = nk_check_label(NK_Context, "MetaData Tags Always Visible", (s32)MetaData_Always_Visible) ? 1 : 0;
-                    
+
                     if (File_Loaded)
                     {
-                        // nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 3);
-                        // nk_label(NK_Context, "Sort Map by Meta Data Tags: ", NK_TEXT_ALIGN_LEFT);
-                        // if (nk_button_label(NK_Context, "Sort")) if(!sortMetaEdits) SortMapByMetaTags();
-                        // if (nk_button_label(NK_Context, "Undo Sort")) {
-                        //     while(sortMetaEdits) {
-                        //         UndoMapEdit();
-                        //         sortMetaEdits--;
-                        //     }
-                        // }
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 1);
                         nk_label(NK_Context, "Sort Map by Meta Data Tags:", NK_TEXT_ALIGN_LEFT);
 
-                        static int NUM_TAGS = sizeof(Default_Tags) / sizeof(char*);
+                        static int NUM_TAGS = sizeof(Default_Tags) / sizeof(char *);
                         static int selected_tags[64] = {0}; // Assuming a maximum of 64 tags
                         static int tree_state = 0;
 
@@ -10605,7 +10590,8 @@ MainArgs
                         if (nk_tree_push(NK_Context, NK_TREE_TAB, "Select Tags", NK_MINIMIZED))
                         {
                             nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 20.0f, 4); // Adjust layout for checkboxes
-                            for (int i = 0; i < NUM_TAGS; i++) {
+                            for (int i = 0; i < NUM_TAGS; i++)
+                            {
                                 char tag_name[32];
                                 snprintf(tag_name, sizeof(tag_name), "%s", Default_Tags[i]);
                                 nk_checkbox_label(NK_Context, tag_name, &selected_tags[i]);
@@ -10614,38 +10600,70 @@ MainArgs
                         }
 
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 3); // Layout for buttons
-                        if (nk_button_label(NK_Context, "Sort Selected")) {
-                            if(!sortMetaEdits) {
+                        if (nk_button_label(NK_Context, "Sort Selected"))
+                        {
+                            if (!sortMetaEdits)
+                            {
                                 u64 tag_mask = 0;
-                                for (int i = 0; i < NUM_TAGS; i++) {
-                                    if (selected_tags[i]) {
+                                for (int i = 0; i < NUM_TAGS; i++)
+                                {
+                                    if (selected_tags[i])
+                                    {
                                         tag_mask |= (1ULL << i);
                                     }
                                 }
                                 SortMapByMetaTags(tag_mask); // Pass the tag mask to the sorting function
                             }
                         }
-                        if (nk_button_label(NK_Context, "Sort All Tags")) {
-                            if(!sortMetaEdits) {
+                        if (nk_button_label(NK_Context, "Sort All Tags"))
+                        {
+                            if (!sortMetaEdits)
+                            {
                                 u64 all_tags_mask = (1ULL << NUM_TAGS) - 1; // Create a mask with all bits set
                                 SortMapByMetaTags(all_tags_mask);
                             }
                         }
-                        if (nk_button_label(NK_Context, "Undo Sort")) {
-                            while(sortMetaEdits) {
+                        if (nk_button_label(NK_Context, "Undo Sort"))
+                        {
+                            while (sortMetaEdits)
+                            {
                                 UndoMapEdit();
                                 sortMetaEdits--;
                             }
                         }
-
                     }
 
                     if (nk_tree_push(NK_Context, NK_TREE_TAB, "Colour Maps", NK_MINIMIZED))
                     {
+                        // nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
+                        // u32 currMap = Color_Maps->currMap;
+                        // ForLoop(Color_Maps->nMaps)
+                        // {
+                        //     currMap = nk_option_label(NK_Context, Color_Map_Names[index], currMap == index) ? index : currMap;
+                        //     nk_image(NK_Context, Color_Maps->mapPreviews[index]);
+                        // }
+
+                        // if (currMap != Color_Maps->currMap)
+                        // {
+                        //     Color_Maps->currMap = currMap;
+                        //     glActiveTexture(GL_TEXTURE1);
+                        //     glBindTexture(GL_TEXTURE_BUFFER, Color_Maps->maps[Color_Maps->currMap]);
+                        //     glActiveTexture(GL_TEXTURE0);
+                        // }
+
+                        // nk_tree_pop(NK_Context);
+
+                        nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
+                        nk_checkbox_label(NK_Context, "Use Custom Order", &useCustomOrder);
+
+                        showUserProfileScreen = nk_button_label(NK_Context, "Edit Order");
+
                         nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
                         u32 currMap = Color_Maps->currMap;
-                        ForLoop(Color_Maps->nMaps)
+
+                        for (u32 i = 0; i < Color_Maps->nMaps; i++)
                         {
+                            u32 index = useCustomOrder ? GetOrderedColorMapIndex(i) : i;
                             currMap = nk_option_label(NK_Context, Color_Map_Names[index], currMap == index) ? index : currMap;
                             nk_image(NK_Context, Color_Maps->mapPreviews[index]);
                         }
@@ -10669,7 +10687,7 @@ MainArgs
                             u32 nEdits = Min(Edits_Stack_Size, Map_Editor->nEdits);
                             char buff[128];
                             stbsp_snprintf((char *)buff, sizeof(buff), "Edits (%u)", nEdits);
-                            
+
                             if (nk_tree_push(NK_Context, NK_TREE_TAB, (char *)buff, NK_MINIMIZED))
                             {
                                 u32 editStackPtr = Map_Editor->editStackPtr == nEdits ? 0 : Map_Editor->editStackPtr;
@@ -10694,32 +10712,33 @@ MainArgs
                                     u32 *name1 = (Original_Contigs + Map_State->originalContigIds[start])->name;
                                     u32 *name2 = (Original_Contigs + Map_State->originalContigIds[end])->name;
                                     u32 *newName = (Original_Contigs + Map_State->originalContigIds[to])->name;
-                                    
+
                                     stbsp_snprintf((char *)buff, sizeof(buff), "Edit %d:", index + 1);
                                     nk_label(NK_Context, (const char *)buff, NK_TEXT_LEFT);
                                     stbsp_snprintf((char *)buff, sizeof(buff), "       %s[%$.2fbp] to %s[%$.2fbp]",
-                                            (char *)name1, (f64)oldFrom * bpPerPixel,
-                                            (char *)name2, (f64)oldTo * bpPerPixel);
+                                                   (char *)name1, (f64)oldFrom * bpPerPixel,
+                                                   (char *)name2, (f64)oldTo * bpPerPixel);
                                     nk_label(NK_Context, (const char *)buff, NK_TEXT_LEFT);
 
-                                    nk_label(NK_Context, edit->finalPix1 > edit->finalPix2 ? (const char *)"       inverted and moved to" : 
-                                            (const char *)"       moved to", NK_TEXT_LEFT);
+                                    nk_label(NK_Context, edit->finalPix1 > edit->finalPix2 ? (const char *)"       inverted and moved to" : (const char *)"       moved to", NK_TEXT_LEFT);
 
                                     stbsp_snprintf((char *)buff, sizeof(buff), "       %s[%$.2fbp]",
-                                            (char *)newName, (f64)Map_State->contigRelCoords[to] * bpPerPixel);
+                                                   (char *)newName, (f64)Map_State->contigRelCoords[to] * bpPerPixel);
                                     nk_label(NK_Context, (const char *)buff, NK_TEXT_LEFT);
 
                                     ++editStackPtr;
                                 }
 
                                 nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 2);
-                                if (nEdits && nk_button_label(NK_Context, "Undo")) UndoMapEdit();
-                                if (nEdits && nk_button_label(NK_Context, "Copy to Clipboard")) CopyEditsToClipBoard(window);
+                                if (nEdits && nk_button_label(NK_Context, "Undo"))
+                                    UndoMapEdit();
+                                if (nEdits && nk_button_label(NK_Context, "Copy to Clipboard"))
+                                    CopyEditsToClipBoard(window);
 
                                 nk_tree_pop(NK_Context);
                             }
                         }
-                        
+
                         {
                             nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 1);
                             if (nk_tree_push(NK_Context, NK_TREE_TAB, "Waypoints", NK_MINIMIZED))
@@ -10737,7 +10756,7 @@ MainArgs
                                         Camera_Position.z = node->z;
                                         ClampCamera();
                                     }
-                                    
+
                                     if (nk_button_label(NK_Context, "Remove"))
                                     {
                                         waypoint *tmp = node->prev;
@@ -10749,7 +10768,7 @@ MainArgs
                                 nk_tree_pop(NK_Context);
                             }
                         }
-                       
+
                         {
                             nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30.0f, 1);
                             if (nk_tree_push(NK_Context, NK_TREE_TAB, "Scaffolds", NK_MINIMIZED))
@@ -10763,7 +10782,7 @@ MainArgs
                                 ForLoop(Contigs->numberOfContigs)
                                 {
                                     contig *cont = Contigs->contigs + index;
-                                    
+
                                     if (cont->scaffId != scaffId)
                                     {
                                         if (scaffId)
@@ -10777,12 +10796,12 @@ MainArgs
                                                 Camera_Position.y = -p;
                                             }
                                         }
-                                        
+
                                         scaffId = cont->scaffId;
                                         scaffLen = 0.0f;
                                         nSeq = 0;
                                     }
-                                    
+
                                     ++nSeq;
                                     f32 d = (f32)((f64)cont->length / (f64)Number_of_Pixels_1D);
                                     pos += d;
@@ -10836,18 +10855,19 @@ MainArgs
                                                     Camera_Position.z = 1.0f;
 
                                                     f32 contigSizeInPixels = (f32)cont->contigMapPixels[index2];
-                                                    f32 screenWidth = (f32)width;         
+                                                    f32 screenWidth = (f32)width;
 
                                                     // f32 zoomLevel =(f32)(contigSizeInPixels / (screenWidth * index2));
-                                                    f32 zoomLevel =(f32)(contigSizeInPixels / (screenWidth));
+                                                    f32 zoomLevel = (f32)(contigSizeInPixels / (screenWidth));
                                                     ZoomCamera(zoomLevel);
-                        
+
                                                     Redisplay = 1;
                                                 }
 
-                                                if (nk_button_label(NK_Context, "Rebuild")) RebuildContig(cont->contigMapPixels[index2]);
+                                                if (nk_button_label(NK_Context, "Rebuild"))
+                                                    RebuildContig(cont->contigMapPixels[index2]);
                                             }
-                                            
+
                                             nk_tree_pop(NK_Context);
                                         }
                                     }
@@ -10890,7 +10910,7 @@ MainArgs
 
                                                 pos += contLen;
                                             }
-                                            
+
                                             nk_tree_pop(NK_Context);
                                         }
                                     }
@@ -10913,59 +10933,64 @@ MainArgs
                                     {
                                         switch (node->type)
                                         {
-                                            case extension_graph:
+                                        case extension_graph:
+                                        {
+                                            graph *gph = (graph *)node->extension;
+
+                                            stbsp_snprintf(buff, sizeof(buff), "Graph: %s", (char *)gph->name);
+
+                                            bounds = nk_widget_bounds(NK_Context);
+                                            gph->on = nk_check_label(NK_Context, buff, (s32)gph->on) ? 1 : 0;
+                                            if (nk_contextual_begin(NK_Context, 0, nk_vec2(Screen_Scale.x * 320, Screen_Scale.y * 340), bounds))
+                                            {
+                                                struct nk_colorf colour = gph->colour;
+
+                                                nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 330, 2);
+                                                nk_group_begin(NK_Context, "...1", 0);
                                                 {
-                                                    graph *gph = (graph *)node->extension;
-                                                    
-                                                    stbsp_snprintf(buff, sizeof(buff), "Graph: %s", (char *)gph->name);
-                                                    
-                                                    bounds = nk_widget_bounds(NK_Context);
-                                                    gph->on = nk_check_label(NK_Context, buff, (s32)gph->on) ? 1 : 0;
-                                                    if (nk_contextual_begin(NK_Context, 0, nk_vec2(Screen_Scale.x * 320, Screen_Scale.y * 340), bounds))
-                                                    {
-                                                        struct nk_colorf colour = gph->colour;
+                                                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
+                                                    nk_label(NK_Context, "Plot Colour", NK_TEXT_CENTERED);
 
-                                                        nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 330, 2);
-                                                        nk_group_begin(NK_Context, "...1", 0);
-                                                        {
-                                                            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
-                                                            nk_label(NK_Context, "Plot Colour", NK_TEXT_CENTERED);
+                                                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 200, 1);
+                                                    colour = nk_color_picker(NK_Context, colour, NK_RGBA);
 
-                                                            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 200, 1);
-                                                            colour = nk_color_picker(NK_Context, colour, NK_RGBA);
+                                                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
+                                                    if (nk_button_label(NK_Context, "Default"))
+                                                        colour = graphColors[0];
 
-                                                            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
-                                                            if (nk_button_label(NK_Context, "Default")) colour = graphColors[0];
+                                                    gph->colour = colour;
 
-                                                            gph->colour = colour;
+                                                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
+                                                    gph->nameOn = nk_check_label(NK_Context, "Label", (s32)gph->nameOn) ? 1 : 0;
 
-                                                            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
-                                                            gph->nameOn = nk_check_label(NK_Context, "Label", (s32)gph->nameOn) ? 1 : 0;
+                                                    nk_group_end(NK_Context);
+                                                }
 
-                                                            nk_group_end(NK_Context);
-                                                        }
-                                            
-                                                        nk_group_begin(NK_Context, "...2", 0);
-                                                        {
-                                                            nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
-                                                            nk_label(NK_Context, "Plot Height", NK_TEXT_CENTERED);
-                                                            nk_slider_float(NK_Context, -16.0f * DefaultGraphBase, &gph->base, 32.0f * DefaultGraphBase, 16.0f);
-                                                            if (nk_button_label(NK_Context, "Default")) gph->base = DefaultGraphBase;
+                                                nk_group_begin(NK_Context, "...2", 0);
+                                                {
+                                                    nk_layout_row_dynamic(NK_Context, Screen_Scale.y * 30, 1);
+                                                    nk_label(NK_Context, "Plot Height", NK_TEXT_CENTERED);
+                                                    nk_slider_float(NK_Context, -16.0f * DefaultGraphBase, &gph->base, 32.0f * DefaultGraphBase, 16.0f);
+                                                    if (nk_button_label(NK_Context, "Default"))
+                                                        gph->base = DefaultGraphBase;
 
-                                                            nk_label(NK_Context, "Plot Scale", NK_TEXT_CENTERED);
-                                                            nk_slider_float(NK_Context, 0, &gph->scale, 8.0f * DefaultGraphScale, 0.005f);
-                                                            if (nk_button_label(NK_Context, "Default")) gph->scale = DefaultGraphScale;
+                                                    nk_label(NK_Context, "Plot Scale", NK_TEXT_CENTERED);
+                                                    nk_slider_float(NK_Context, 0, &gph->scale, 8.0f * DefaultGraphScale, 0.005f);
+                                                    if (nk_button_label(NK_Context, "Default"))
+                                                        gph->scale = DefaultGraphScale;
 
-                                                            nk_label(NK_Context, "Line Width", NK_TEXT_CENTERED);
-                                                            nk_slider_float(NK_Context, 0.1f, &gph->lineSize, 2.0f * DefaultGraphLineSize, 0.001f);
-                                                            if (nk_button_label(NK_Context, "Default")) gph->lineSize = DefaultGraphLineSize;
+                                                    nk_label(NK_Context, "Line Width", NK_TEXT_CENTERED);
+                                                    nk_slider_float(NK_Context, 0.1f, &gph->lineSize, 2.0f * DefaultGraphLineSize, 0.001f);
+                                                    if (nk_button_label(NK_Context, "Default"))
+                                                        gph->lineSize = DefaultGraphLineSize;
 
-                                                            nk_group_end(NK_Context);
-                                                        }
+                                                    nk_group_end(NK_Context);
+                                                }
 
-                                                        nk_contextual_end(NK_Context);
-                                                    }
-                                                } break;
+                                                nk_contextual_end(NK_Context);
+                                            }
+                                        }
+                                        break;
                                         }
                                     }
                                     nk_tree_pop(NK_Context);
@@ -10997,26 +11022,27 @@ MainArgs
                 if (currFileName)
                 {
                     u08 state;
-                    if ((state = FileBrowserRun("Save State", &saveBrowser, NK_Context, (u32)showSaveStateScreen, 1))) 
+                    if ((state = FileBrowserRun("Save State", &saveBrowser, NK_Context, (u32)showSaveStateScreen, 1)))
                     {
                         SaveState(headerHash, saveBrowser.file, state & 2);
                         FileBrowserReloadDirectoryContent(&saveBrowser, saveBrowser.directory);
                     }
 
-                    if ((state = FileBrowserRun("Generate AGP", &saveAGPBrowser, NK_Context, (u32)showSaveAGPScreen, 2))) 
+                    if ((state = FileBrowserRun("Generate AGP", &saveAGPBrowser, NK_Context, (u32)showSaveAGPScreen, 2)))
                     {
                         FenceIn(GenerateAGP(saveAGPBrowser.file, state & 2, state & 4, state & 8));
                         FileBrowserReloadDirectoryContent(&saveAGPBrowser, saveAGPBrowser.directory);
                     }
 
-                    if (FileBrowserRun("Load State", &loadBrowser, NK_Context, (u32)showLoadStateScreen)) LoadState(headerHash, loadBrowser.file);
+                    if (FileBrowserRun("Load State", &loadBrowser, NK_Context, (u32)showLoadStateScreen))
+                        LoadState(headerHash, loadBrowser.file);
 
                     MetaTagsEditorRun(NK_Context, (u08)showMetaDataTagEditor);
                 }
 
                 AboutWindowRun(NK_Context, (u32)showAboutScreen);
                 u08 state;
-                if ((state = UserProfileEditorRun("User profile editor", &saveBrowser, NK_Context, (u32)showUserProfileScreen, 1))) 
+                if ((state = UserProfileEditorRun("User profile editor", &saveBrowser, NK_Context, (u32)showUserProfileScreen, 1)))
                 {
                     UserSaveState("trial", state & 2, saveBrowser.file);
                     FileBrowserReloadDirectoryContent(&saveBrowser, saveBrowser.directory);
@@ -11047,10 +11073,12 @@ MainArgs
             glfwSetCursor(window, crossCursor);
         }
 
-        if (!Redisplay) glfwWaitEvents();
+        if (!Redisplay)
+            glfwWaitEvents();
     }
 
-    if (currFileName) SaveState(headerHash);
+    if (currFileName)
+        SaveState(headerHash);
 
     ThreadPoolWait(Thread_Pool);
     ThreadPoolDestroy(Thread_Pool);
